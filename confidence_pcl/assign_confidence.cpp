@@ -19,7 +19,7 @@ pcl::PointCloud<pcl::InterestPoint>::Ptr assign_confidence(pcl::PointCloud<pcl::
     for(int i=0; i<cloud->points.size(); i++){
         pcl::InterestPoint pnt;
         pnt.x=cloud->points[i].x; pnt.y=cloud->points[i].y; pnt.z=cloud->points[i].z;
-        pnt.strength=1;
+        pnt.strength=-1;
         seed->push_back(pnt);
     }
     f->conf_assigner(seed);

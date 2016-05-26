@@ -12,7 +12,7 @@
 
 pcl::PointCloud<pcl::InterestPoint>::Ptr full_confidence(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud){
     pcl::PointCloud<pcl::InterestPoint>::Ptr pc (new pcl::PointCloud<pcl::InterestPoint> ());
-    for(int i=0; i<pc->points.size(); i++){
+    for(int i=0; i<cloud->points.size(); i++){
         pcl::PointXYZ pnt = cloud->points[i];
         pcl::InterestPoint p;
         p.x=pnt.x; p.y=pnt.y; p.z=pnt.z;

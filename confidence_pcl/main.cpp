@@ -41,23 +41,19 @@ int main(int argc, char **argv){
     PCL_ERROR ("Couldn't read pcd file \n");
     exit(1);
     }
-    std::cout << "Loaded "
-            << observeCloud->width * observeCloud->height
-            << " data points from pcd with the following fields: "
-            << std::endl;
-    for (size_t i = 0; i < observeCloud->points.size (); ++i)
-    std::cout << "    " << observeCloud->points[i].x
-              << " "    << observeCloud->points[i].y
-              << " "    << observeCloud->points[i].z << std::endl;
+
+    //cout<<"Prediction Cloud size: "<<predictCloud->points.size()<<endl<<"Observation Cloud size: "<<observeCloud->points.size()<<endl<<endl;
 
 
     //combine into pcl_conf with confidences
-    Confidencor *confidence_assigner = new ConstConf(); //<--- change confidencor function here
+    Confidencor *confidence_assigner = new ConstConf(0); //<--- change confidencor function here
 
     //assign full confidence to observeCloud
     pcl::PointCloud<pcl::InterestPoint>::Ptr confPCL=full_confidence(observeCloud);
+    //cout<<"confPCL size: "<<confPCL->points.size()<<endl<<endl;
     //asign confidence to everything
     assign_confidence(confPCL, predictCloud, confidence_assigner);
+    //cout<<"confPCL size: "<<confPCL->points.size()<<endl<<endl;
 
 
     //create rgb point cloud for visualization
@@ -65,8 +61,8 @@ int main(int argc, char **argv){
     for(int i=0; i<confPCL->points.size(); i++){
         pcl::PointXYZRGB pnt;
         pnt.x=confPCL->points[i].x;pnt.y=confPCL->points[i].y;pnt.z=confPCL->points[i].z;
-        pnt.r=20; pnt.b=20;
-        pnt.g=70+130*confPCL->points[i].strength;
+        pnt.r=0; pnt.b=0;
+        pnt.g=100+155*confPCL->points[i].strength;
         confPclRGB->push_back(pnt);
     }
 

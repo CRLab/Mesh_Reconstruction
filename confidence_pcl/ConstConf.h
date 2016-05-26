@@ -19,7 +19,10 @@ using namespace std;
 typedef unsigned char byte;
 
 class ConstConf: public Confidencor{
+private:
+    float confidence;
 public:
+    ConstConf(float conf);
     virtual void conf_assigner(pcl::PointCloud<pcl::InterestPoint>::Ptr pc);
 };
 
