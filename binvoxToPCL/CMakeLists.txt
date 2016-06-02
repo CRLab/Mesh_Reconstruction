@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
 project(convertBinvox)
 
 find_package(PCL 1.2 REQUIRED)
+#SET(CMAKE_CXX_FLAGS "-std=c++0x -Wno-deprecated")
 
 include_directories(${PCL_INCLUDE_DIRS})
 link_directories(${PCL_LIBRARY_DIRS})

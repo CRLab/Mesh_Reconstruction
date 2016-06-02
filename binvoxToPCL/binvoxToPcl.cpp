@@ -21,6 +21,31 @@ int get_index(binvox vox, int x, int y, int z){
     return index;
 }
 
+/*//function returns density of point cloud i.e. #points/volume of bounding box
+template<typename PointT>
+float getDensity(boost::shared_ptr<pcl::PointCloud<PointT>> cloud){
+    //get min/max points of bounding box
+    float min_x=10000;
+    float max_x=-10000;
+    float min_y=10000;
+    float max_y=-10000;
+    float min_z=10000;
+    float max_z=-10000;
+    for(int i=0; i<cloud->points.size(); i++){
+        if(cloud->points[i].x<min_x) min_x=cloud->points[i].x;
+        if(cloud->points[i].x>max_x) max_x=cloud->points[i].x;
+        if(cloud->points[i].y<min_y) min_y=cloud->points[i].y;
+        if(cloud->points[i].y>max_y) max_y=cloud->points[i].y;
+        if(cloud->points[i].z<min_z) min_z=cloud->points[i].z;
+        if(cloud->points[i].z>max_z) max_z=cloud->points[i].z;
+    }
+    PointT dims;
+    dims.x=max_x-min_x; dims.y=max_y-min_y; dims.z = max_z-min_z;
+
+    float volume=dims.x*dims.y*dims.z;
+    return ((float)cloud->points.size())/volume;
+}*/
+
 int read_binvox(binvox* vox, string filespec)
 {
 
@@ -111,7 +136,11 @@ int read_binvox(binvox* vox, string filespec)
 
 }
 
-pcl::PointCloud<pcl::PointXYZ>::Ptr binvoxToPCL(string filespec){
+pcl::PointCloud<pcl::PointXYZ>::Ptr binvoxToPCL(string filespec, int res_factor){
+    if(res_factor<1){
+        cout<<"Resolution factor must be at least 1"<<endl<<endl;
+        exit(1);
+    }
     binvox vox;
     if (!read_binvox(&vox, filespec)){
         cout << "Error reading [" << filespec << "]" <<endl <<endl;
@@ -125,16 +154,38 @@ pcl::PointCloud<pcl::PointXYZ>::Ptr binvoxToPCL(string filespec){
             for(int z=0; z<vox.height; z++){
                 int index = get_index(vox, x,y,z);
                 if(vox.voxels[index]){
-                    pcl::PointXYZ pnt;
-                    pnt.x = ((float)x + 0.5)*vox.scale/((float)vox.depth) + vox.tx;
-                    pnt.y = ((float)y + 0.5)*vox.scale/((float)vox.width) + vox.ty;
-                    pnt.z = ((float)z + 0.5)*vox.scale/((float)vox.height) + vox.tz;
-                    cloud->push_back(pnt);
+                    //create points evenly distributed inside of voxel
+                    pcl::PointXYZ pnt[res_factor*res_factor*res_factor];
+                    for(int i=0; i<res_factor; i++){
+                        for(int j=0; j<res_factor; j++){
+                            for(int k=0; k<res_factor; k++){
+                                int ind=i*res_factor*res_factor+j*res_factor+k;
+                                pnt[ind].x = ((float)x+(0.5/(float)res_factor)+(float)i*(1/(float)res_factor))*vox.scale/((float)vox.depth)+vox.tx;
+                                pnt[ind].y = ((float)y+(0.5/(float)res_factor)+(float)j*(1/(float)res_factor))*vox.scale/((float)vox.width)+vox.ty;
+                                pnt[ind].z = ((float)z+(0.5/(float)res_factor)+(float)k*(1/(float)res_factor))*vox.scale/((float)vox.height)+vox.tz;
+                                cloud->push_back(pnt[ind]);
+                            }
+                        }
+                    }//finished generate points for voxel x,y,z
+
                 }
             }
         }
-    }
+    }//finished generating point cloud
 
     return cloud;
-
 }
+
+/*//automatically adjust point cloud resolutions based on density ratio:
+template<typename PointT>
+pcl::PointCloud<pcl::PointXYZ>::Ptr binvoxToPCL_autores(string filespec, boost::shared_ptr<pcl::PointCloud<PointT>> otherCloud){
+    float otherDensity = getDensity<PointT>(otherCloud);
+    pcl::PointCloud<pcl::PointXYZ>::Ptr initCloud = binvoxToPCL(filespec);
+    float density = getDensity<pcl::PointXYZ>(initCloud);
+    if(density>otherDensity) return initCloud;
+    else{
+        int res_factor = otherDensity/density;
+        return binvoxToPCL(filespec, res_factor);
+    }
+}
+*/

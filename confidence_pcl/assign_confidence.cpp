@@ -15,6 +15,7 @@ using namespace std;
 
 typedef unsigned char byte;
 
+
 pcl::PointCloud<pcl::InterestPoint>::Ptr assign_confidence(pcl::PointCloud<pcl::InterestPoint>::Ptr seed, pcl::PointCloud<pcl::PointXYZ>::Ptr cloud, Confidencor* f){
     for(int i=0; i<cloud->points.size(); i++){
         pcl::InterestPoint pnt;

@@ -8,10 +8,11 @@
 #include <pcl/visualization/pcl_visualizer.h>
 #include <pcl/console/parse.h>
 
+#include "voxelize.h"
+
 #include "binvoxToPcl.h"
 #include "assign_confidence.h"
 
-//include different confidencors to test
 #include "ConstConf.h"
 
 using namespace std;
@@ -49,32 +50,12 @@ int main(int argc, char **argv){
 
     //asign confidence to everything
     assign_confidence(confPCL, predictCloud, confidence_assigner);
-    //cout<<"confPCL size: "<<confPCL->points.size()<<endl<<endl;
 
+    //voxelize the data
+    voxelized_data* data = voxelizeData(confPCL, 1.0); //<--test different resolutions
 
-    //create rgb point cloud for visualization
-    pcl::PointCloud<pcl::PointXYZRGB>::Ptr confPclRGB (new pcl::PointCloud<pcl::PointXYZRGB>());
-    for(int i=0; i<confPCL->points.size(); i++){
-        pcl::PointXYZRGB pnt;
-        pnt.x=confPCL->points[i].x;pnt.y=confPCL->points[i].y;pnt.z=confPCL->points[i].z;
-        pnt.r=0; pnt.b=0;
-        pnt.g=100+155*confPCL->points[i].strength;
-        confPclRGB->push_back(pnt);
-    }
-
-    //display in visualizor
-    boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer (new pcl::visualization::PCLVisualizer ("3D Viewer"));
-    viewer->setBackgroundColor (0, 0, 0);
-    pcl::visualization::PointCloudColorHandlerRGBField<pcl::PointXYZRGB> rgb(confPclRGB);
-    viewer->addPointCloud<pcl::PointXYZRGB> (confPclRGB, rgb, "sample cloud");
-    viewer->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, "sample cloud");
-    viewer->addCoordinateSystem (1.0);
-    viewer->initCameraParameters ();
-    while (!viewer->wasStopped ())
-    {
-        viewer->spinOnce (100);
-        boost::this_thread::sleep (boost::posix_time::microseconds (100000));
-    }
+    //visualize
+    //visualizeData(data);
 
     return 1;
 }
