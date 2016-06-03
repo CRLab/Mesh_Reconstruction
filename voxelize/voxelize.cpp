@@ -11,7 +11,6 @@
 #include <pcl/point_types.h>
 #include <pcl/filters/voxel_grid.h>
 #include <pcl/io/pcd_io.h>
-#include <pcl/PCLPointCloud2.h>
 #include <pcl/octree/octree.h>
 
 #include <iostream>

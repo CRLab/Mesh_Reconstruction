@@ -12,6 +12,7 @@ add_definitions(${PCL_DEFINITIONS})
 add_subdirectory(binvoxToPCL)
 add_subdirectory(confidence_pcl)
 add_subdirectory(voxelize)
+add_subdirectory(narrow_band)
 
 add_executable (mesh_reconstruction main.cpp)
-target_link_libraries (mesh_reconstruction voxelize_lib assignConfidence_lib binvoxToPcl_lib ${PCL_LIBRARIES})
+target_link_libraries (mesh_reconstruction narrowBand_lib voxelize_lib assignConfidence_lib binvoxToPcl_lib ${PCL_LIBRARIES})

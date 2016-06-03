@@ -21,7 +21,6 @@
 
 using namespace std;
 
-typedef pcl::VoxelGrid<pcl::PCLPointCloud2> VoxelGrid;
 typedef boost::shared_ptr< pcl::VoxelGrid<pcl::InterestPoint> > VoxelGridPtr;
 
 struct voxelized_data{
