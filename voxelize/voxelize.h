@@ -30,6 +30,7 @@ struct voxelized_data{
     VoxelGridPtr grid_data;
     pcl::octree::OctreePointCloudSearch<pcl::InterestPoint>::Ptr octree;
 };
+typedef boost::shared_ptr< voxelized_data> voxelized_dataPtr;
 
 //create voxel grid data
 VoxelGridPtr voxelize(pcl::PointCloud<pcl::InterestPoint>::Ptr input, pcl::PointCloud<pcl::InterestPoint>::Ptr output, float resolution);
@@ -47,7 +48,7 @@ void modifyStrengths(VoxelGridPtr grid, pcl::PointCloud<pcl::InterestPoint>::Ptr
 
 
 //function for creating voxelized point cloud
-voxelized_data* voxelizeData(pcl::PointCloud<pcl::InterestPoint>::Ptr cloud, float resolution);
+voxelized_dataPtr voxelizeData(pcl::PointCloud<pcl::InterestPoint>::Ptr cloud, float resolution);
 
 //show point clouds in visualizer
 void visualizeData(voxelized_data* data);

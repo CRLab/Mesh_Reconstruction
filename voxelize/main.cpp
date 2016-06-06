@@ -51,8 +51,12 @@ int main(int argc, char **argv){
     //asign confidence to everything
     assign_confidence(confPCL, predictCloud, confidence_assigner);
 
+
+
+
+
     //voxelize the data
-    voxelized_data* data = voxelizeData(confPCL, 1.0); //<--test different resolutions
+    voxelized_dataPtr data = voxelizeData(confPCL, 1.0); //<--test different resolutions
 
     //visualize
     //visualizeData(data);

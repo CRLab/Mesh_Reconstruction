@@ -86,6 +86,7 @@ gridPtr dilate_grid(gridPtr gr){
 //generate band and tight band (eroded band) using dist field "margin" and band_size
 bandsPtr createBands(gridPtr margin, float band_size){
     bandsPtr bnds = bandsPtr(new bands());
+    bnds->band = gridPtr(new grid());
     bnds->band->dims=margin->dims;
     bnds->band->voxels=allocGrid(bnds->band->dims);
     //create band
@@ -123,7 +124,6 @@ bandsPtr createBands(gridPtr margin, float band_size){
         }
     }
 
-    bnds->band->~grid();
     bnds->band=dilate_grid(bnds->tight_band);
 
     return bnds;

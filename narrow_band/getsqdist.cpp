@@ -17,6 +17,7 @@ float*** allocGrid(Eigen::Vector3i dims){
             arr[i][j] = new float[dims[2]];
         }
     }
+    return arr;
 }
 
 //create grid with voxel values=confidence values of point cloud
@@ -30,6 +31,7 @@ gridPtr createGrid(pcl::PointCloud<pcl::InterestPoint>::Ptr grid_cloud, VoxelGri
                 Eigen::Vector3i pnt;
                 pnt[0]=i; pnt[1]=j; pnt[2]=k;
                 int index = vox->getCentroidIndexAt(pnt);
+                cout<<index<<endl<<endl;
                 if(index!=-1) g->voxels[i][j][k] = grid_cloud->points[index].strength;
                 else g->voxels[i][j][k]=0.0;
             }

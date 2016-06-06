@@ -73,11 +73,11 @@ void modifyStrengths(pcl::PointCloud<pcl::InterestPoint>::Ptr filtered_cloud,
     }//end of loop through voxel grid
 }
 
-voxelized_data* voxelizeData(pcl::PointCloud<pcl::InterestPoint>::Ptr cloud, float resolution){
+voxelized_dataPtr voxelizeData(pcl::PointCloud<pcl::InterestPoint>::Ptr cloud, float resolution){
     //create dummy object
     pcl::PointCloud<pcl::InterestPoint>::Ptr dummy (new pcl::PointCloud<pcl::InterestPoint>());
 
-    voxelized_data* data = new voxelized_data();
+    voxelized_dataPtr data (new voxelized_data());
     data->resolution=resolution;
     data->input_cloud=cloud;
     data->filtered_cloud = dummy;
@@ -87,7 +87,7 @@ voxelized_data* voxelizeData(pcl::PointCloud<pcl::InterestPoint>::Ptr cloud, flo
     return data;
 }
 
-void visualizeData(voxelized_data* data){
+void visualizeData(voxelized_dataPtr data){
     //create rgb point cloud for visualization
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr confPclRGB (new pcl::PointCloud<pcl::PointXYZRGB>());
     for(int i=0; i<data->input_cloud->points.size(); i++){

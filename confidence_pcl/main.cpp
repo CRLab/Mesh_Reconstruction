@@ -41,6 +41,11 @@ int main(int argc, char **argv){
     }
     pcl::PointCloud<pcl::PointXYZ>::Ptr predictCloud = binvoxToPCL(argv[1]);
 
+
+
+
+
+
     //combine into pcl_conf with confidences
     Confidencor *confidence_assigner = new ConstConf(0); //<--- change confidencor function here
 
