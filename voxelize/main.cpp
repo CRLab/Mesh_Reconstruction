@@ -59,7 +59,7 @@ int main(int argc, char **argv){
     voxelized_dataPtr data = voxelizeData(confPCL, 1.0); //<--test different resolutions
 
     //visualize
-    //visualizeData(data);
+    visualizeData(data);
 
     return 1;
 }

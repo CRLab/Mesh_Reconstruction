@@ -14,6 +14,7 @@ typedef boost::shared_ptr< pcl::VoxelGrid<pcl::InterestPoint> > VoxelGridPtr;
 
 struct grid{
     float*** voxels;
+    Eigen::Vector3i t_;
     Eigen::Vector3i dims;
     ~grid() {
         for(int i=0; i<dims[0]; i++){
@@ -34,6 +35,9 @@ gridPtr createGrid(pcl::PointCloud<pcl::InterestPoint>::Ptr grid_cloud, VoxelGri
 
 //create binary volume grid from confidence grid
 gridPtr getBinaryVolume(gridPtr grid_cloud);
+
+//copy grid
+gridPtr copyGrid(gridPtr in);
 
 //get negative of grid
 gridPtr getNegGrid(gridPtr in);

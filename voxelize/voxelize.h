@@ -51,6 +51,6 @@ void modifyStrengths(VoxelGridPtr grid, pcl::PointCloud<pcl::InterestPoint>::Ptr
 voxelized_dataPtr voxelizeData(pcl::PointCloud<pcl::InterestPoint>::Ptr cloud, float resolution);
 
 //show point clouds in visualizer
-void visualizeData(voxelized_data* data);
+void visualizeData(voxelized_dataPtr data);
 
 #endif

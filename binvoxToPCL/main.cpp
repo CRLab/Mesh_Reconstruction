@@ -5,7 +5,7 @@
 #include <boost/thread/thread.hpp>
 #include <pcl/common/common_headers.h>
 #include <pcl/features/normal_3d.h>
-//#include <pcl/visualization/pcl_visualizer.h>
+#include <pcl/visualization/pcl_visualizer.h>
 #include <pcl/console/parse.h>
 
 #include "binvoxToPcl.h"
@@ -33,7 +33,7 @@ int main(int argc, char **argv){
     pcl::PCDWriter writer;
     writer.write<pcl::PointXYZ> (ss.str (), *cloud, false);
 
-    /*boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer (new pcl::visualization::PCLVisualizer ("3D Viewer"));
+    boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer (new pcl::visualization::PCLVisualizer ("3D Viewer"));
      viewer->setBackgroundColor (0, 0, 0);
      pcl::visualization::PointCloudColorHandlerCustom<pcl::PointXYZ> single_color(cloud, 0, 255, 0);
      viewer->addPointCloud<pcl::PointXYZ> (cloud, single_color, "sample cloud");
@@ -44,5 +44,5 @@ int main(int argc, char **argv){
      {
          viewer->spinOnce (100);
          boost::this_thread::sleep (boost::posix_time::microseconds (100000));
-     }*/
+     }
 }

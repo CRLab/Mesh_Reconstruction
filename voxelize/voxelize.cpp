@@ -26,7 +26,6 @@ VoxelGridPtr voxelize(pcl::PointCloud<pcl::InterestPoint>::Ptr input, pcl::Point
 
     //create voxelized data
     VoxelGridPtr sor (new pcl::VoxelGrid<pcl::InterestPoint>());
-    //VoxelGrid sor;
 
     sor->setInputCloud(input);
     sor->setLeafSize (resolution, resolution, resolution);
@@ -98,39 +97,39 @@ void visualizeData(voxelized_dataPtr data){
         confPclRGB->push_back(pnt);
     }
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr filtered_cloudRGB (new pcl::PointCloud<pcl::PointXYZRGB>());
-    for(int i=0; i<data->filtered_cloud->points.size(); i++){
-        pcl::PointXYZRGB pnt;
-        pnt.x=data->filtered_cloud->points[i].x;pnt.y=data->filtered_cloud->points[i].y;pnt.z=data->filtered_cloud->points[i].z;
-        pnt.r=0; pnt.b=0;
-        pnt.g=100+155*data->filtered_cloud->points[i].strength;
-        filtered_cloudRGB->push_back(pnt);
+    Eigen::Vector3i dims_min = data->grid_data->getMinBoxCoordinates();
+    Eigen::Vector3i dims_max = data->grid_data->getMaxBoxCoordinates();
+    for(int i=dims_min[0]; i<=dims_max[0]; i++){
+        for(int j=dims_min[1]; j<=dims_max[1]; j++){
+            for(int k=dims_min[2]; k<=dims_max[2]; k++){
+                Eigen::Vector3i pnt;
+                pnt[0]=i;pnt[1]=j;pnt[2]=k;
+                int index = data->grid_data->getCentroidIndexAt(pnt);
+                if(index!=-1){
+                    pcl::PointXYZRGB p;
+                    p.x=data->filtered_cloud->points[index].x;p.y=data->filtered_cloud->points[index].y;p.z=data->filtered_cloud->points[index].z;
+                    p.g=0; p.b=0;
+                    p.r=100+155*data->filtered_cloud->points[i].strength;
+                    filtered_cloudRGB->push_back(p);
+                }
+            }
+        }
     }
 
     //display in visualizor
-    boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer1 (new pcl::visualization::PCLVisualizer ("3D Viewer"));
-    viewer1->setBackgroundColor (0, 0, 0);
+    boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer (new pcl::visualization::PCLVisualizer ("3D Viewer"));
+    viewer->setBackgroundColor (0, 0, 0);
     pcl::visualization::PointCloudColorHandlerRGBField<pcl::PointXYZRGB> rgb(confPclRGB);
-    viewer1->addPointCloud<pcl::PointXYZRGB> (confPclRGB, rgb, "sample cloud");
-    viewer1->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, "sample cloud");
-    viewer1->addCoordinateSystem (1.0);
-    viewer1->initCameraParameters ();
-    while (!viewer1->wasStopped ())
-    {
-        viewer1->spinOnce (100);
-        boost::this_thread::sleep (boost::posix_time::microseconds (100000));
-    }
-
-    //display in visualizor
-    boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer2 (new pcl::visualization::PCLVisualizer ("3D Viewer"));
-    viewer2->setBackgroundColor (0, 0, 0);
     pcl::visualization::PointCloudColorHandlerRGBField<pcl::PointXYZRGB> rgb2(filtered_cloudRGB);
-    viewer2->addPointCloud<pcl::PointXYZRGB> (filtered_cloudRGB, rgb2, "sample cloud");
-    viewer2->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, "sample cloud");
-    viewer2->addCoordinateSystem (1.0);
-    viewer2->initCameraParameters ();
-    while (!viewer2->wasStopped ())
+    viewer->addPointCloud<pcl::PointXYZRGB> (confPclRGB, rgb, "cloud");
+    viewer->addPointCloud<pcl::PointXYZRGB> (filtered_cloudRGB, rgb2, "filtered cloud");
+    viewer->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, "cloud");
+    viewer->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, "filtered cloud");
+    viewer->addCoordinateSystem (1.0);
+    viewer->initCameraParameters ();
+    while (!viewer->wasStopped ())
     {
-        viewer2->spinOnce (100);
+        viewer->spinOnce (100);
         boost::this_thread::sleep (boost::posix_time::microseconds (100000));
     }
 

@@ -15,13 +15,14 @@ typedef boost::shared_ptr<bands> bandsPtr;
 
 //morphological erosion with mask: [[000;010;000],[010,111,010],[000;010;000]]
 gridPtr erode_grid(gridPtr gr){
-    gridPtr eroded = gridPtr(new grid());
-    eroded->dims = gr->dims;
-    eroded->voxels = allocGrid(eroded->dims);
+    gridPtr eroded = copyGrid(gr);
     for(int i=1; i<eroded->dims[0]-1; i++){
         for(int j=1; j<eroded->dims[1]-1; j++){
             for(int k=1; k<eroded->dims[2]-1; k++){
-                if(gr->voxels[i-1][j][k]==0.0){
+                if(gr->voxels[i][j][k]==0.0){
+                    eroded->voxels[i][j][k]=0.0;
+                }
+                else if(gr->voxels[i-1][j][k]==0.0){
                     eroded->voxels[i][j][k]=0.0;
                 }
                 else if(gr->voxels[i][j-1][k]==0.0){
@@ -40,7 +41,7 @@ gridPtr erode_grid(gridPtr gr){
                     eroded->voxels[i][j][k]=0.0;
                 }
                 else{
-                    eroded->voxels[i][j][k]=gr->voxels[i][j][k];
+                    eroded->voxels[i][j][k]=1.0;
                 }
             }
         }
@@ -50,13 +51,14 @@ gridPtr erode_grid(gridPtr gr){
 
 //morphological dilation with mask: [[000;010;000],[010,111,010],[000;010;000]]
 gridPtr dilate_grid(gridPtr gr){
-    gridPtr dilated = gridPtr(new grid());
-    dilated->dims = gr->dims;
-    dilated->voxels = allocGrid(dilated->dims);
+    gridPtr dilated = copyGrid(gr);
     for(int i=1; i<dilated->dims[0]-1; i++){
         for(int j=1; j<dilated->dims[1]-1; j++){
             for(int k=1; k<dilated->dims[2]-1; k++){
-                if(gr->voxels[i-1][j][k]==1.0){
+                if(gr->voxels[i][j][k]==1.0){
+                    dilated->voxels[i][j][k]=1.0;
+                }
+                else if(gr->voxels[i-1][j][k]==1.0){
                     dilated->voxels[i][j][k]=1.0;
                 }
                 else if(gr->voxels[i][j-1][k]==1.0){
@@ -75,7 +77,7 @@ gridPtr dilate_grid(gridPtr gr){
                     dilated->voxels[i][j][k]=1.0;
                 }
                 else{
-                    dilated->voxels[i][j][k]=gr->voxels[i][j][k];
+                    dilated->voxels[i][j][k]=0.0;
                 }
             }
         }
@@ -87,6 +89,7 @@ gridPtr dilate_grid(gridPtr gr){
 bandsPtr createBands(gridPtr margin, float band_size){
     bandsPtr bnds = bandsPtr(new bands());
     bnds->band = gridPtr(new grid());
+    bnds->band->t_ = margin->t_;
     bnds->band->dims=margin->dims;
     bnds->band->voxels=allocGrid(bnds->band->dims);
     //create band
@@ -102,28 +105,7 @@ bandsPtr createBands(gridPtr margin, float band_size){
             }
         }
     }
-
     bnds->tight_band = erode_grid(bnds->band);
-    //clear edges
-    for(int i=0; i<bnds->tight_band->dims[0]; i++){
-        for(int j=0; j<bnds->tight_band->dims[1]; j++){
-            bnds->band->voxels[i][j][0]=0.0;
-            bnds->band->voxels[i][j][bnds->tight_band->dims[2]-1]=0.0;
-        }
-    }
-    for(int i=0; i<bnds->tight_band->dims[0]; i++){
-        for(int k=0; k<bnds->tight_band->dims[2]; k++){
-            bnds->band->voxels[i][0][k]=0.0;
-            bnds->band->voxels[i][bnds->tight_band->dims[1]-1][k]=0.0;
-        }
-    }
-    for(int j=0; j<bnds->tight_band->dims[1]; j++){
-        for(int k=0; k<bnds->tight_band->dims[2]; k++){
-            bnds->band->voxels[0][j][k]=0.0;
-            bnds->band->voxels[bnds->tight_band->dims[0]-1][j][k]=0.0;
-        }
-    }
-
     bnds->band=dilate_grid(bnds->tight_band);
 
     return bnds;
