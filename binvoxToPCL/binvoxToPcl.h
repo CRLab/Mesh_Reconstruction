@@ -31,6 +31,7 @@ struct binvox{
     byte *voxels;
     float tx, ty, tz;
     float scale;
+
 };
 
 int get_index(binvox vox, int x, int y, int z);

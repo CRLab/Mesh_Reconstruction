@@ -22,6 +22,24 @@ void doStep(int row, double *in, double *out,
     out[row] = res;
 }
 
+/*void ProcessRow(int row, double *in, double *out,
+    int *ir, int *jc, double *pr, double *invdg,
+    double *lb, double *ub)
+{
+    double res = 0;
+    int start = jc[row];
+    int end   = jc[row+1];
+    int i;
+    
+    for(i = start; i < end; i++) 
+        res +=  pr[i]*in[ir[i]];
+        
+    res = (in[row]-res*invdg[row])*0.5;
+    if(res < lb[row]) res = lb[row];
+    if(res > ub[row]) res = ub[row];
+    out[row] = res;
+}*/
+
 
 void mexFunction(
 		 int		nlhs,

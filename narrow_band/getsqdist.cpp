@@ -26,7 +26,7 @@ gridPtr createGrid(pcl::PointCloud<pcl::InterestPoint>::Ptr grid_cloud, VoxelGri
     g->t_ = vox->getMinBoxCoordinates();
     g->dims = vox->getNrDivisions();
     //pad the grid with empty voxels 5 on each side
-    int pad= 5;
+    int pad= 6;
     g->dims[0]+=pad*2; g->dims[1]+=pad*2; g->dims[2]+=pad*2;
     g->t_[0]-=pad; g->t_[1]-=pad; g->t_[2]-=pad;
     g->voxels = allocGrid(g->dims);
@@ -130,18 +130,17 @@ gridPtr fastPerim(gridPtr volume_grid){
                 else if(j==g->dims[1]-1)pos_j=0;
                 if(k==0)neg_k=0;
                 else if(k==g->dims[2]-1)pos_k=0;
-                    //search neighboring voxels for different value
-                    for(int i_=i-neg_i; i_<=i+pos_i; i_++){
-                        for(int j_=j-neg_j; j_<=j+pos_j; j_++){
-                            for(int k_=k-neg_k; k_<=k+pos_k; k_++){
-                                if(volume_grid->voxels[i][j][k]!=volume_grid->voxels[i_][j_][k_]){
-                                    g->voxels[i][j][k]=0.0;
-                                }
+                //search neighboring voxels for different value
+                for(int i_=i-neg_i; i_<=i+pos_i; i_++){
+                    for(int j_=j-neg_j; j_<=j+pos_j; j_++){
+                        for(int k_=k-neg_k; k_<=k+pos_k; k_++){
+                            if(volume_grid->voxels[i][j][k]!=volume_grid->voxels[i_][j_][k_]){
+                                g->voxels[i][j][k]=0.0;
                             }
                         }
                     }
-                    //end of neighbor search
-                //}
+                }
+                //end of neighbor search
             }
         }
     }
