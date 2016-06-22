@@ -1,9 +1,11 @@
-
 #include <Eigen/Sparse>
 #include <iostream>
 
 #include "narrowBand.h"
 #include "primeqp.h"
+
+namespace lemp
+{
 
 using namespace std;
 
@@ -51,7 +53,7 @@ vector<int> findIndexes(gridPtr band){
 }
 
 //create index map
-gridPtr getIndexMap(gridPtr band, vector<int> indexes){
+gridPtr getIndexMap(gridPtr band, vector<int>& indexes){
     gridPtr map_ (new grid());
     map_->dims = band->dims;
     map_->t_ = band->t_;
@@ -291,7 +293,7 @@ qp_argsPtr primeQP(gridPtr volume, gridPtr margin, bandsPtr bnds){
     out->lb = lb_;
     out->ub = ub_;
     out->x = x_;
-    out->iter = 300;
+    out->iter = 10;
 
     cout<<"quadratic program ready"<<endl;
     return out;
@@ -341,5 +343,7 @@ void visualizeGrid(gridPtr grid){
         viewer->spinOnce (100);
         boost::this_thread::sleep (boost::posix_time::microseconds (100000));
     }
+
+}
 
 }

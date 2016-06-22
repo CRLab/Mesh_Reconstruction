@@ -23,6 +23,8 @@
 #include <iostream>
 
 using namespace std;
+using namespace lemp;
+//using namespace conf;
 
 typedef unsigned char byte;
 
@@ -56,7 +58,7 @@ int main(int argc, char **argv){
 
     //write to file
     ofstream myfile;
-    myfile.open("embed_func_test.txt");
+    myfile.open("embed_func_sphere.txt");
     for(int i=0; i<F->dims[0]; i++){
         for(int j=0; j<F->dims[1]; j++){
             for(int k=0; k<F->dims[2]; k++){

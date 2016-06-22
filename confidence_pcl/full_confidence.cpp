@@ -16,7 +16,8 @@ pcl::PointCloud<pcl::InterestPoint>::Ptr full_confidence(pcl::PointCloud<pcl::Po
         pcl::PointXYZ pnt = cloud->points[i];
         pcl::InterestPoint p;
         p.x=pnt.x; p.y=pnt.y; p.z=pnt.z;
-        p.strength=1;
+        p.strength=1.0;
+        //p.strength=0.0;
         pc->push_back(p);
     }
 

@@ -9,7 +9,7 @@ include_directories(${PCL_INCLUDE_DIRS} /home/adamjri/mesh_reconstruction/binvox
 
 link_directories(${PCL_LIBRARY_DIRS})
 add_definitions(${PCL_DEFINITIONS})
-add_library(assignConfidence_lib SHARED full_confidence.h full_confidence.cpp assign_confidence.h assign_confidence.cpp Confidencor.h ConstConf.h ConstConf.cpp)
+add_library(assignConfidence_lib SHARED full_confidence.h full_confidence.cpp assign_confidence.h assign_confidence.cpp Confidencor.h ConstConf.h ConstConf.cpp GaussConf.h GaussConf.cpp)
 
 target_link_libraries (assignConfidence_lib  binvoxToPcl_lib ${PCL_LIBRARIES})
 add_executable (assignConfidence main.cpp)

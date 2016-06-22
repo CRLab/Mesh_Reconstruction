@@ -1,19 +1,19 @@
-#ifndef QUADPROG_H
-#define QUADPROG_H
+#ifndef QP_CONF_H
+#define QP_CONF_H
 
 #include <math.h>
 #include <stdlib.h>
 #include <memory.h>
 #include <iostream>
 
-#include "primeqp.h"
+#include "primeqp_conf.h"
 #include "narrowBand.h"
 
-namespace lemp
+namespace conf
 {
 
 using namespace std;
-using namespace lemp;
+using namespace conf;
 
 //more formatting for rapid algorithm
 //takes advantage of sparseness
@@ -32,7 +32,7 @@ vector<float> runQP(qp_argsPtr args);
 
 //Function for computing weighted voxel grid for marching cubes
 //takes as input a binary volume
-gridPtr optimize(gridPtr volume);
+gridPtr optimize(gridPtr confGrid, gridPtr volume);
 
 }
 

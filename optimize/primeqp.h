@@ -9,7 +9,9 @@
 #include <iostream>
 
 #include "narrowBand.h"
-#include "primeqp.h"
+
+namespace lemp
+{
 
 using namespace std;
 
@@ -37,7 +39,7 @@ int sub2ind(Eigen::Vector3i subs, Eigen::Vector3i dims);
 vector<int> findIndexes(gridPtr band);
 
 //create index map
-gridPtr getIndexMap(gridPtr band, vector<int> indexes);
+gridPtr getIndexMap(gridPtr band, vector<int>& indexes);
 
 //make H matrix
 SparseMatrixPtr getHMat(gridPtr tightBand, gridPtr indexMap);
@@ -52,6 +54,8 @@ qp_argsPtr primeQP(gridPtr volume, gridPtr margin, bandsPtr bnds);
 
 //visualize grid data
 void visualizeGrid(gridPtr grid);
+
+}
 
 
 #endif

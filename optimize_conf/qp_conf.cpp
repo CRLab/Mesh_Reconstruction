@@ -1,18 +1,19 @@
+
 #include <math.h>
 #include <stdlib.h>
 #include <memory.h>
 #include <iostream>
 
-#include "primeqp.h"
+#include "primeqp_conf.h"
 #include "narrowBand.h"
 
-#include "quadprog.h"
+#include "qp_conf.h"
 
-namespace lemp
+namespace conf
 {
 
 using namespace std;
-using namespace lemp;
+using namespace conf;
 
 //more formatting for rapid algorithm
 //takes advantage of sparseness
@@ -54,7 +55,7 @@ vector<float> getPr(SparseMatrixPtr R){
 
 //row increment
 void doStep(int row, vector<float>& in, vector<float>& out,
-    vector<int>& ir, vector<int>& jc, vector<float>& pr, vector<float>& invdg,
+    vector<int>& ir, vector<int>& jc, vector<float>& pr,
     vector<float>& lb, vector<float>& ub)
 {
     float res = 0;
@@ -62,10 +63,11 @@ void doStep(int row, vector<float>& in, vector<float>& out,
     int end   = jc[row+1];
     int i;
 
-    for(i = start; i < end; i++)
+    for(i = start; i < end; i++){
         res +=  pr[i]*in[ir[i]];
+    }
 
-    res = (in[row]-res*invdg[row])*0.5;
+    res = (in[row]-res)*0.5;
     if(res < lb[row]) res = lb[row];
     if(res > ub[row]) res = ub[row];
     out[row] = res;
@@ -74,11 +76,11 @@ void doStep(int row, vector<float>& in, vector<float>& out,
 //quadratic programming optimization algorithm
 vector<float> runQP(qp_argsPtr args){
     //get ir and jc
-    vector<int> ir = getIr(args->R);
-    vector<int> jc = getJc(args->R);
-    vector<float> pr = getPr(args->R);
+    vector<int> ir = getIr(args->M);
+    vector<int> jc = getJc(args->M);
+    vector<float> pr = getPr(args->M);
 
-    int size = args->R->rows();
+    int size = args->M->rows();
 
     vector<float>* buf1 = new vector<float>(args->x);
     vector<float>* buf2 = new vector<float>(size, 0);
@@ -97,7 +99,7 @@ vector<float> runQP(qp_argsPtr args){
         }
 
         for(int r = 0; r < size; r++){
-            doStep(r, *in, *out, ir, jc, pr, args->invdg, args->lb, args->ub);
+            doStep(r, *in, *out, ir, jc, pr, args->lb, args->ub);
         }
         /*
         float sum=0;
@@ -109,14 +111,15 @@ vector<float> runQP(qp_argsPtr args){
     }
 
     cout<<"quadratic program finished"<<endl;
-    return *out;
+    return addVec((*out), args->z);
+    //return *out;
 }
 
 
 
 //Function for computing weighted voxel grid for marching cubes
 //takes as input a binary volume
-gridPtr optimize(gridPtr volume){
+gridPtr optimize(gridPtr confGrid, gridPtr volume){
     int BAND_SIZE=4.0;
     //prime quadratic programming arguments
     //prepare margin
@@ -127,7 +130,7 @@ gridPtr optimize(gridPtr volume){
     vector<int> indexes = findIndexes(bnds->band);
 
     //prepare qp_args
-    qp_argsPtr args = primeQP(volume, margin, bnds);
+    qp_argsPtr args = primeQP(confGrid, volume, margin, bnds);
 
     //run quadratic programming
     vector<float> x = runQP(args);

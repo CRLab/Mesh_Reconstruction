@@ -13,24 +13,26 @@
 #include "binvoxToPcl.h"
 #include "assign_confidence.h"
 
+//include confidencor functions
 #include "ConstConf.h"
+#include "GaussConf.h"
 
 #include "getsqdist.h"
 #include "narrowBand.h"
 
-#include "quadprog.h"
+#include "qp_conf.h"
 
 #include <iostream>
 
 using namespace std;
-using namespace lemp;
+using namespace conf;
 
 typedef unsigned char byte;
 
 int main(int argc, char **argv){
     //convert binvox to pcl
     if(argc != 3){
-        cout <<"Usage: Optimize Mesh <binvox filename> <pcd filename>" << endl << endl;
+        cout <<"Usage: Optimize Mesh with Confidences <binvox filename> <pcd filename>" << endl << endl;
         exit(1);
     }
 
@@ -46,7 +48,7 @@ int main(int argc, char **argv){
     pcl::PointCloud<pcl::PointXYZ>::Ptr predictCloud = binvoxToPCL(argv[1]);
 
     //combine into pcl_conf with confidences
-    Confidencor *confidence_assigner = new ConstConf(1); //<--- change confidencor function here
+    Confidencor *confidence_assigner = new GaussConf(); //<--- change confidencor function here
 
     //assign full confidence to observeCloud
     pcl::PointCloud<pcl::InterestPoint>::Ptr confPCL=full_confidence(observeCloud);
@@ -62,7 +64,7 @@ int main(int argc, char **argv){
     gridPtr volume = getBinaryVolume(grid_cloud);
 
     //get imbedding function
-    gridPtr F = optimize(volume);
+    gridPtr F = optimize(grid_cloud, volume);
     //gridPtr F = volume;
 
     //write to file

@@ -149,10 +149,10 @@ gridPtr fastPerim(gridPtr volume_grid){
 }
 
 //implementation of Saito and Toriwaki distance field
+//squared euclidean distance to closest 0-value voxel
 gridPtr getsqdist(gridPtr volume_grid){
-    //extract perimeter
-    gridPtr dist_grid = fastPerim(volume_grid);
-    //make a copy
+    //make copies
+    gridPtr dist_grid = copyGrid(volume_grid);
     gridPtr dist_grid_copy = copyGrid(dist_grid);
     //first transformation
     for(int i=0; i<dist_grid->dims[0]; i++){
