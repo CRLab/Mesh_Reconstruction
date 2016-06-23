@@ -13,6 +13,7 @@
 
 //include different confidencors to test
 #include "ConstConf.h"
+#include "GaussConf.h"
 
 using namespace std;
 
@@ -47,7 +48,7 @@ int main(int argc, char **argv){
 
 
     //combine into pcl_conf with confidences
-    Confidencor *confidence_assigner = new ConstConf(0); //<--- change confidencor function here
+    Confidencor *confidence_assigner = new GaussConf(); //<--- change confidencor function here
 
     //assign full confidence to observeCloud
     pcl::PointCloud<pcl::InterestPoint>::Ptr confPCL=full_confidence(observeCloud);
@@ -63,7 +64,7 @@ int main(int argc, char **argv){
         pcl::PointXYZRGB pnt;
         pnt.x=confPCL->points[i].x;pnt.y=confPCL->points[i].y;pnt.z=confPCL->points[i].z;
         pnt.r=0; pnt.b=0;
-        pnt.g=100+155*confPCL->points[i].strength;
+        pnt.g=50+205*confPCL->points[i].strength;
         confPclRGB->push_back(pnt);
     }
 

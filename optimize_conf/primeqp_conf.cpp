@@ -48,8 +48,9 @@ gridPtr applyConfidence(gridPtr confGrid){
                 float conf = confGrid->voxels[xyz[0]][xyz[1]][xyz[2]];
                 //get new confidence value using gaussian
                 float dist = margin->voxels[i][j][k];
-                float exp = -dist*dist/4;
-                float gauss = (1.0f/(2.0f*3.1415927f))*pow(2.71828f,exp);
+                float var = 1.0;
+                float exp = -dist*dist/(2.0*var);
+                float gauss = pow(2.71828f,exp);
                 margin->voxels[i][j][k] = conf*gauss;
                 if(margin->voxels[i][j][k]<0.001) margin->voxels[i][j][k]=0.0;
             }
@@ -241,7 +242,6 @@ vector<float> subtractVec(vector<float>& in1, vector<float>& in2){
         return in1;
     }
     vector<float> out (in1.size(), 0.0);
-    cout<<"out size: "<<out.size()<<endl;
     for(int i=0; i<in1.size(); i++){
         out[i]=in1[i]-in2[i];
     }
@@ -255,7 +255,6 @@ vector<float> getZVec(SparseMatrixPtr R, SparseMatrixPtr C, vector<float> x_0){
     *M = (*getInverse(M))*(*C);
     cout<<"inverse computed"<<endl;
     M->prune(0,0);
-    cout<<"M: "<<M->rows()<<" x "<<M->cols()<<endl;
     return multiplyMatVec(M, x_0);
 }
 

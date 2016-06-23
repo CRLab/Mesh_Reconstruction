@@ -37,14 +37,13 @@ void GaussConf::conf_assigner(pcl::PointCloud<pcl::InterestPoint>::Ptr pc){
             vector<int> pointIdxNKNSearch(1);
             vector<float> pointNKNSquaredDistance(1);
             kdtree.nearestKSearch(pc->points[i], 1, pointIdxNKNSearch, pointNKNSquaredDistance);
-            //get confidence and distance
-            float conf = observed->points[pointIdxNKNSearch[0]].strength;
+            //get distance
             float dist = (float) sqrt((double)pointNKNSquaredDistance[0]);
             //compute new confidence from gaussian
-            float var = 2.0;   //<-------------------------------------------------need a way to compute reasonable variance
-            float exp = -dist*dist/(var*var);
-            float gauss = (1.0f/((float)sqrt(var*2.0)*3.1415927f))*pow(2.71828f,exp);
-            pc->points[i].strength = gauss*conf;
+            float var = 1.0;   //<-------------------------------------------------need a way to compute reasonable variance
+            float exp = -dist*dist/(2*var);
+            float gauss = pow(2.71828f,exp);
+            pc->points[i].strength = gauss;
         }
     }
 }
