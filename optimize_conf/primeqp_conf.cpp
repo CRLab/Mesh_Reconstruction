@@ -1,10 +1,4 @@
 
-#include <Eigen/Sparse>
-#include <Eigen/SparseCholesky>
-#include <iostream>
-#include <cmath>
-
-#include "narrowBand.h"
 #include "primeqp_conf.h"
 
 namespace conf
@@ -23,11 +17,11 @@ gridPtr applyConfidence(gridPtr confGrid){
     for(int i=0; i<margin->dims[0]; i++){
         for(int j=0; j<margin->dims[1]; j++){
             for(int k=0; k<margin->dims[2]; k++){
-                if(margin->voxels[i][j][k]>-1.0){
-                    margin->voxels[i][j][k]=0.0;
+                if((*margin)[i][j][k]>-1.0){
+                    (*margin)[i][j][k]=0.0;
                 }
                 else{
-                    margin->voxels[i][j][k]=1.0;
+                    (*margin)[i][j][k]=1.0;
                 }
             }
         }
@@ -44,15 +38,14 @@ gridPtr applyConfidence(gridPtr confGrid){
         for(int j=0; j<margin->dims[1]; j++){
             for(int k=0; k<margin->dims[2]; k++){
                 //get confidence value of closest point
-                Eigen::Vector3i xyz = ind2sub((int)margin_ind->voxels[i][j][k], margin->dims);
-                float conf = confGrid->voxels[xyz[0]][xyz[1]][xyz[2]];
+                float conf = (*confGrid)((int)(*margin_ind)[i][j][k]);
                 //get new confidence value using gaussian
-                float dist = margin->voxels[i][j][k];
+                float dist = (*margin)[i][j][k];
                 float var = 1.0;
                 float exp = -dist*dist/(2.0*var);
                 float gauss = pow(2.71828f,exp);
-                margin->voxels[i][j][k] = conf*gauss;
-                if(margin->voxels[i][j][k]<0.001) margin->voxels[i][j][k]=0.0;
+                (*margin)[i][j][k] = conf*gauss;
+                if((*margin)[i][j][k]<0.001) (*margin)[i][j][k]=0.0;
             }
         }
     }
@@ -76,7 +69,7 @@ gridPtr getsqdist_index(gridPtr volume_grid){
                 float x_ind = -1.0;
                 for(int index=0; index<dist_grid->dims[0]; index++){
                     float dist = 100000;
-                    if(dist_grid->voxels[index][j][k]==0.0){
+                    if((*dist_grid)[index][j][k]==0.0){
                         dist = (index-i)*(index-i);
                     }
                     if(dist<min){
@@ -85,9 +78,9 @@ gridPtr getsqdist_index(gridPtr volume_grid){
                     }
                 }
                 //set value of voxel to min q dist
-                dist_grid_copy->voxels[i][j][k]=min;
+                (*dist_grid_copy)[i][j][k]=min;
                 //set index value to x index
-                index_grid_copy->voxels[i][j][k]=x_ind;
+                (*index_grid_copy)[i][j][k]=x_ind;
             }
         }
     }//end of first transformation
@@ -101,15 +94,15 @@ gridPtr getsqdist_index(gridPtr volume_grid){
                 int min = 100000;
                 float xy_ind = -1.0;
                 for(int index=0; index<dist_grid->dims[1]; index++){
-                    int dist = dist_grid->voxels[i][index][k] + (index-j)*(index-j);
+                    int dist = (*dist_grid)[i][index][k] + (index-j)*(index-j);
                     if(dist<min){
                         min=dist;
-                        xy_ind = (float)(index*index_grid->dims[0])+index_grid->voxels[i][index][k];
+                        xy_ind = (float)(index*index_grid->dims[0])+(*index_grid)[i][index][k];
                     }
                 }
                 //set value of voxel to min q dist
-                dist_grid_copy->voxels[i][j][k]=(float)min;
-                index_grid_copy->voxels[i][j][k] = xy_ind;
+                (*dist_grid_copy)[i][j][k]=(float)min;
+                (*index_grid_copy)[i][j][k] = xy_ind;
             }
         }
     }//end of second transformation
@@ -123,15 +116,15 @@ gridPtr getsqdist_index(gridPtr volume_grid){
                 int min = 100000;
                 float xyz_ind=-1.0;
                 for(int index=0; index<dist_grid->dims[2]; index++){
-                    int dist = dist_grid->voxels[i][j][index] + (index-k)*(index-k);
+                    int dist = (*dist_grid)[i][j][index] + (index-k)*(index-k);
                     if(dist<min){
                         min=dist;
-                        xyz_ind = (float)(index*index_grid->dims[0]*index_grid->dims[1])+index_grid->voxels[i][j][index];
+                        xyz_ind = (float)(index*index_grid->dims[0]*index_grid->dims[1])+(*index_grid)[i][j][index];
                     }
                 }
                 //set value of voxel to min q dist
-                dist_grid_copy->voxels[i][j][k]=(float)min;
-                index_grid_copy->voxels[i][j][k] = xyz_ind;
+                (*dist_grid_copy)[i][j][k]=(float)min;
+                (*index_grid_copy)[i][j][k] = xyz_ind;
             }
         }
     }//end of third transformation
@@ -150,14 +143,6 @@ SparseMatrixPtr getInverse(SparseMatrixPtr in){
     solver.compute(*in);
     SparseMatrixPtr out (new Eigen::SparseMatrix<float> (solver.solve(I)));
 
-/*    for (int k=0; k<out->outerSize(); ++k){
-        for (Eigen::SparseMatrix<float>::InnerIterator it(*out,k); it; ++it)
-        {
-            cout<<"("<<it.row()<<", "<<it.col()<<")= ";
-            cout<<it.value()<<endl;
-        }
-    }
-*/
     return out;
 }
 
@@ -167,8 +152,7 @@ SparseMatrixPtr getCMat(gridPtr confGrid, vector<int>& indexes){
     vector<Eigen::Triplet<float> > tripletList;
     tripletList.reserve(indexes.size());
     for(int i=0; i<indexes.size(); i++){
-        Eigen::Vector3i xyz = ind2sub(indexes[i], confGrid->dims);
-        float conf = confGrid->voxels[xyz[0]][xyz[1]][xyz[2]];
+        float conf = (*confGrid)(indexes[i]);
         tripletList.push_back(Eigen::Triplet<float>(i,i,conf));
     }
     //create sparse matrix
@@ -262,21 +246,6 @@ vector<float> getZVec(SparseMatrixPtr R, SparseMatrixPtr C, vector<float> x_0){
 
 //**********************************************************************
 
-//convert linear index to vector subscript
-Eigen::Vector3i ind2sub(int linear_index, Eigen::Vector3i dims){
-    Eigen::Vector3i subs;
-    subs[2] = linear_index/(dims[0]*dims[1]);
-    linear_index = linear_index%(dims[0]*dims[1]);
-    subs[1] = linear_index/dims[0];
-    subs[0] = linear_index%dims[0];
-    return subs;
-}
-
-//convert vector subscript to linear index
-int sub2ind(Eigen::Vector3i subs, Eigen::Vector3i dims){
-    return subs[2]*dims[0]*dims[1]+subs[1]*dims[0]+subs[0];
-}
-
 
 //get linear indices of all non-zero voxels in grid
 vector<int> findIndexes(gridPtr band){
@@ -285,10 +254,10 @@ vector<int> findIndexes(gridPtr band){
     for(int i=0; i<band->dims[0]; i++){
         for(int j=0; j<band->dims[1]; j++){
             for(int k=0; k<band->dims[2]; k++){
-                if(band->voxels[i][j][k]!=0.0){
+                if((*band)[i][j][k]!=0.0){
                     Eigen::Vector3i pnt;
                     pnt[0]=i; pnt[1]=j; pnt[2]=k;
-                    indexes_copy[num_ind] = sub2ind(pnt, band->dims);
+                    indexes_copy[num_ind] = band->sub2ind(pnt);
                     num_ind++;
                 }
             }
@@ -304,22 +273,18 @@ vector<int> findIndexes(gridPtr band){
 
 //create index map
 gridPtr getIndexMap(gridPtr band, vector<int>& indexes){
-    gridPtr map_ (new grid());
-    map_->dims = band->dims;
-    map_->t_ = band->t_;
-    map_->voxels = allocGrid(map_->dims);
+    gridPtr map_(new grid(band->dims, band->t_));
     //set all values to -1
     for(int i=0; i<map_->dims[0]; i++){
         for(int j=0; j<map_->dims[1]; j++){
             for(int k=0; k<map_->dims[2]; k++){
-                map_->voxels[i][j][k]=-1.0;
+                (*map_)[i][j][k]=-1.0;
             }
         }
     }
     //give i.d.'s to band location
     for(int i=0; i<indexes.size(); i++){
-        Eigen::Vector3i pnt = ind2sub(indexes[i], band->dims);
-        map_->voxels[pnt[0]][pnt[1]][pnt[2]]=(float)i;
+        (*map_)(indexes[i])=(float)i;
     }
     return map_;
 }
@@ -332,7 +297,7 @@ SparseMatrixPtr getHMat(gridPtr tightBand, gridPtr indexMap){
     //get subscript vector for indexes
     Eigen::Vector3i subs[ntight];
     for(int i=0; i<ntight; i++){
-        subs[i] = ind2sub(indexes[i], tightBand->dims);
+        subs[i] = tightBand->ind2sub(indexes[i]);
     }
 
     //create Hi
@@ -352,47 +317,47 @@ SparseMatrixPtr getHMat(gridPtr tightBand, gridPtr indexMap){
     index=0;
     //add mid
     for(int i=0; i<ntight; i++){
-        Hj[index] = indexMap->voxels[subs[i][0]][subs[i][1]][subs[i][2]];
+        Hj[index] = (*indexMap)[subs[i][0]][subs[i][1]][subs[i][2]];
         index++;
     }
     //add left
     for(int i=0; i<ntight; i++){
-        Hj[index] = indexMap->voxels[subs[i][0]-1][subs[i][1]][subs[i][2]];
+        Hj[index] = (*indexMap)[subs[i][0]-1][subs[i][1]][subs[i][2]];
         index++;
     }
     //add right
     for(int i=0; i<ntight; i++){
-        Hj[index] = indexMap->voxels[subs[i][0]+1][subs[i][1]][subs[i][2]];
+        Hj[index] = (*indexMap)[subs[i][0]+1][subs[i][1]][subs[i][2]];
         index++;
     }
     //add mid
     for(int i=0; i<ntight; i++){
-        Hj[index] = indexMap->voxels[subs[i][0]][subs[i][1]][subs[i][2]];
+        Hj[index] = (*indexMap)[subs[i][0]][subs[i][1]][subs[i][2]];
         index++;
     }
     //add top
     for(int i=0; i<ntight; i++){
-        Hj[index] = indexMap->voxels[subs[i][0]][subs[i][1]-1][subs[i][2]];
+        Hj[index] = (*indexMap)[subs[i][0]][subs[i][1]-1][subs[i][2]];
         index++;
     }
     //add bottom
     for(int i=0; i<ntight; i++){
-        Hj[index] = indexMap->voxels[subs[i][0]][subs[i][1]+1][subs[i][2]];
+        Hj[index] = (*indexMap)[subs[i][0]][subs[i][1]+1][subs[i][2]];
         index++;
     }
     //add mid
     for(int i=0; i<ntight; i++){
-        Hj[index] = indexMap->voxels[subs[i][0]][subs[i][1]][subs[i][2]];
+        Hj[index] = (*indexMap)[subs[i][0]][subs[i][1]][subs[i][2]];
         index++;
     }
     //add front
     for(int i=0; i<ntight; i++){
-        Hj[index] = indexMap->voxels[subs[i][0]][subs[i][1]][subs[i][2]-1];
+        Hj[index] = (*indexMap)[subs[i][0]][subs[i][1]][subs[i][2]-1];
         index++;
     }
     //add back
     for(int i=0; i<ntight; i++){
-        Hj[index] = indexMap->voxels[subs[i][0]][subs[i][1]][subs[i][2]+1];
+        Hj[index] = (*indexMap)[subs[i][0]][subs[i][1]][subs[i][2]+1];
         index++;
     }
 
@@ -437,17 +402,15 @@ SparseMatrixPtr getHMat(gridPtr tightBand, gridPtr indexMap){
 vector<float> getlb(gridPtr margin, gridPtr volume, vector<int>& indexes){
     //make a copy of margin
     //set values outside of volume to -1000
-    gridPtr lbnd (new grid());
-    lbnd->dims=margin->dims;
-    lbnd->voxels=allocGrid(lbnd->dims);
+    gridPtr lbnd (new grid(margin->dims, margin->t_));
     for(int i=0; i<lbnd->dims[0]; i++){
         for(int j=0; j<lbnd->dims[1]; j++){
             for(int k=0; k<lbnd->dims[2]; k++){
-                if(volume->voxels[i][j][k]==0.0){
-                    lbnd->voxels[i][j][k]=-1000.0;
+                if((*volume)[i][j][k]==0.0){
+                    (*lbnd)[i][j][k]=-1000.0;
                 }
                 else{
-                    lbnd->voxels[i][j][k]=margin->voxels[i][j][k];
+                    (*lbnd)[i][j][k]=(*margin)[i][j][k];
                 }
             }
         }
@@ -456,8 +419,7 @@ vector<float> getlb(gridPtr margin, gridPtr volume, vector<int>& indexes){
     //create lb vector using linear indexes
     vector<float> lb (indexes.size(), 0);
     for(int i=0; i<lb.size(); i++){
-        Eigen::Vector3i pnt = ind2sub(indexes[i], lbnd->dims);
-        lb[i] = lbnd->voxels[pnt[0]][pnt[1]][pnt[2]];
+        lb[i] = (*lbnd)(indexes[i]);
     }
 
     return lb;
@@ -466,17 +428,15 @@ vector<float> getlb(gridPtr margin, gridPtr volume, vector<int>& indexes){
 vector<float> getub(gridPtr margin, gridPtr volume, vector<int>& indexes){
     //make a copy of negative margin
     //set values inside of volume to 1000
-    gridPtr ubnd (new grid());
-    ubnd->dims=margin->dims;
-    ubnd->voxels=allocGrid(ubnd->dims);
+    gridPtr ubnd (new grid(margin->dims, margin->t_));
     for(int i=0; i<ubnd->dims[0]; i++){
         for(int j=0; j<ubnd->dims[1]; j++){
             for(int k=0; k<ubnd->dims[2]; k++){
-                if(volume->voxels[i][j][k]==1.0){
-                    ubnd->voxels[i][j][k]=1000.0;
+                if((*volume)[i][j][k]==1.0){
+                    (*ubnd)[i][j][k]=1000.0;
                 }
                 else{
-                    ubnd->voxels[i][j][k]=-margin->voxels[i][j][k];
+                    (*ubnd)[i][j][k]=-(*margin)[i][j][k];
                 }
             }
         }
@@ -485,8 +445,7 @@ vector<float> getub(gridPtr margin, gridPtr volume, vector<int>& indexes){
     //create ub vector using linear indexes
     vector<float> ub (indexes.size(), 0);
     for(int i=0; i<ub.size(); i++){
-        Eigen::Vector3i pnt = ind2sub(indexes[i], ubnd->dims);
-        ub[i] = ubnd->voxels[pnt[0]][pnt[1]][pnt[2]];
+        ub[i] = (*ubnd)(indexes[i]);
     }
 
     return ub;
@@ -570,13 +529,13 @@ void visualizeGrid(gridPtr grid){
     for(int i=0; i<grid->dims[0]; i++){
         for(int j=0; j<grid->dims[1]; j++){
             for(int k=0; k<grid->dims[2]; k++){
-                if(grid->voxels[i][j][k]>0){
+                if((*grid)[i][j][k]>0){
                     pcl::PointXYZRGB pnt;
                     pnt.x=(float)i; pnt.y=(float)j; pnt.z=(float)k;
                     pnt.r=0;pnt.g=0;pnt.b=255;
                     pcl_grid->push_back(pnt);
                 }
-                else if(grid->voxels[i][j][k]<0){
+                else if((*grid)[i][j][k]<0){
                     pcl::PointXYZRGB pnt;
                     pnt.x=(float)i; pnt.y=(float)j; pnt.z=(float)k;
                     pnt.r=0;pnt.g=0;pnt.b=0;

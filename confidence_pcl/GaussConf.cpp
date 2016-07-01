@@ -1,14 +1,8 @@
 #include <pcl/point_types.h>
-#include <pcl/io/pcd_io.h>
 #include <pcl/kdtree/kdtree_flann.h>
-#include <pcl/surface/mls.h>
 
-#include <string>
-#include <fstream>
-#include <iostream>
 #include <stdlib.h>
 
-#include "full_confidence.h"
 #include "Confidencor.h"
 #include "GaussConf.h"
 
@@ -16,7 +10,7 @@ using namespace std;
 
 typedef unsigned char byte;
 
-GaussConf::GaussConf(){}
+GaussConf::GaussConf(float var):variance(var){}
 
 void GaussConf::conf_assigner(pcl::PointCloud<pcl::InterestPoint>::Ptr pc){
     //create a copy of the observed point cloud
@@ -40,8 +34,7 @@ void GaussConf::conf_assigner(pcl::PointCloud<pcl::InterestPoint>::Ptr pc){
             //get distance
             float dist = (float) sqrt((double)pointNKNSquaredDistance[0]);
             //compute new confidence from gaussian
-            float var = 1.0;   //<-------------------------------------------------need a way to compute reasonable variance
-            float exp = -dist*dist/(2*var);
+            float exp = -dist*dist/(2*variance); //<-------------------------------------------------need a way to compute reasonable variance
             float gauss = pow(2.71828f,exp);
             pc->points[i].strength = gauss;
         }

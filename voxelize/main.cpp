@@ -1,12 +1,3 @@
-#include <pcl/point_types.h>
-#include <pcl/io/pcd_io.h>
-#include <pcl/kdtree/kdtree_flann.h>
-#include <pcl/surface/mls.h>
-#include <boost/thread/thread.hpp>
-#include <pcl/common/common_headers.h>
-#include <pcl/features/normal_3d.h>
-#include <pcl/visualization/pcl_visualizer.h>
-#include <pcl/console/parse.h>
 
 #include "voxelize.h"
 
@@ -51,12 +42,8 @@ int main(int argc, char **argv){
     //asign confidence to everything
     assign_confidence(confPCL, predictCloud, confidence_assigner);
 
-
-
-
-
     //voxelize the data
-    voxelized_dataPtr data = voxelizeData(confPCL, 1.0); //<--test different resolutions
+    voxelized_dataPtr data = voxelizeData(confPCL); //<--test different resolutions
 
     //visualize
     visualizeData(data);

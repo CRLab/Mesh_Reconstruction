@@ -11,7 +11,7 @@ include_directories(${PCL_INCLUDE_DIRS} /home/adamjri/mesh_reconstruction/voxeli
 
 link_directories(${PCL_LIBRARY_DIRS})
 add_definitions(${PCL_DEFINITIONS})
-add_library(narrowBand_lib SHARED narrowBand.h narrowBand.cpp getsqdist.h getsqdist.cpp)
+add_library(narrowBand_lib SHARED grid.h grid.cpp narrowBand.h narrowBand.cpp getsqdist.h getsqdist.cpp)
 
 target_link_libraries (narrowBand_lib  binvoxToPcl_lib assignConfidence_lib voxelize_lib ${PCL_LIBRARIES})
 add_executable (narrowBand main.cpp)

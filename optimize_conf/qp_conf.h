@@ -1,13 +1,7 @@
 #ifndef QP_CONF_H
 #define QP_CONF_H
 
-#include <math.h>
-#include <stdlib.h>
-#include <memory.h>
-#include <iostream>
-
 #include "primeqp_conf.h"
-#include "narrowBand.h"
 
 namespace conf
 {

@@ -6,7 +6,6 @@
 
 #include <Eigen/Eigen>
 #include <Eigen/Sparse>
-#include <iostream>
 
 #include "narrowBand.h"
 
@@ -29,11 +28,6 @@ struct qp_args{
     int iter;
 };
 typedef boost::shared_ptr<qp_args> qp_argsPtr;
-
-//convert linear index to vector subscript
-Eigen::Vector3i ind2sub(int linear_index, Eigen::Vector3i dims);
-//convert vector subscript to linear index
-int sub2ind(Eigen::Vector3i subs, Eigen::Vector3i dims);
 
 //get linear indices of all non-zero voxels in grid
 vector<int> findIndexes(gridPtr band);

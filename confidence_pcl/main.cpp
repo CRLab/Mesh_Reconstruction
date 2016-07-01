@@ -35,27 +35,20 @@ int main(int argc, char **argv){
     exit(1);
     }
 
-    binvox vox;
-    if(!read_binvox(&vox, argv[1])){
-        cout << "Error reading [" << argv[1] << "]" << endl << endl;
-        exit(1);
-    }
-    pcl::PointCloud<pcl::PointXYZ>::Ptr predictCloud = binvoxToPCL(argv[1]);
-
-
-
-
+    pcl::PointCloud<pcl::PointXYZ>::Ptr predictCloud = binvoxToPCL_autores(argv[1], observeCloud);
+    //pcl::PointCloud<pcl::PointXYZ>::Ptr predictCloud = binvoxToPCL(argv[1]);
 
 
     //combine into pcl_conf with confidences
-    Confidencor *confidence_assigner = new GaussConf(); //<--- change confidencor function here
+    float variance = 1.5/getDensity(predictCloud);
+    Confidencor *confidence_assigner = new GaussConf(variance); //<--- change confidencor function here
 
     //assign full confidence to observeCloud
     pcl::PointCloud<pcl::InterestPoint>::Ptr confPCL=full_confidence(observeCloud);
 
     //asign confidence to everything
     assign_confidence(confPCL, predictCloud, confidence_assigner);
-    //cout<<"confPCL size: "<<confPCL->points.size()<<endl<<endl;
+
 
 
     //create rgb point cloud for visualization
@@ -63,7 +56,7 @@ int main(int argc, char **argv){
     for(int i=0; i<confPCL->points.size(); i++){
         pcl::PointXYZRGB pnt;
         pnt.x=confPCL->points[i].x;pnt.y=confPCL->points[i].y;pnt.z=confPCL->points[i].z;
-        pnt.r=0; pnt.b=0;
+        pnt.r=255-(50+205*confPCL->points[i].strength); pnt.b=0;
         pnt.g=50+205*confPCL->points[i].strength;
         confPclRGB->push_back(pnt);
     }

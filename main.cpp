@@ -1,12 +1,3 @@
-#include <pcl/point_types.h>
-#include <pcl/io/pcd_io.h>
-#include <pcl/kdtree/kdtree_flann.h>
-#include <pcl/surface/mls.h>
-#include <boost/thread/thread.hpp>
-#include <pcl/common/common_headers.h>
-#include <pcl/features/normal_3d.h>
-#include <pcl/visualization/pcl_visualizer.h>
-#include <pcl/console/parse.h>
 
 #include "voxelize.h"
 
@@ -30,9 +21,11 @@ typedef unsigned char byte;
 
 int main(int argc, char **argv){
     //create sphere volume
-    gridPtr volume (new grid);
-    volume->dims[0]=64;volume->dims[1]=64;volume->dims[2]=64;
-    volume->voxels = allocGrid(volume->dims);
+    Eigen::Vector3i dims;
+    Eigen::Vector3i t_;
+    dims[0]=64;dims[1]=64;dims[2]=64;
+    t_[0]=0;t_[1]=0;t_[2]=0;
+    gridPtr volume (new grid(dims, t_));
     float p = (float)floor(64.0*0.33);
     p=p*p;
     for(int i=0; i<64; i++){
@@ -42,14 +35,15 @@ int main(int argc, char **argv){
                 dist+= ((float)j-31.5)*((float)j-31.5);
                 dist+= ((float)k-31.5)*((float)k-31.5);
                 if(dist<p){
-                    volume->voxels[i][j][k]=1.0;
+                    (*volume)[i][j][k]=1.0;
                 }
                 else{
-                    volume->voxels[i][j][k]=0.0;
+                    (*volume)[i][j][k]=0.0;
                 }
             }
         }
     }
+    cout<<"sphere created"<<endl;
 
 
     //get imbedding function
@@ -58,11 +52,11 @@ int main(int argc, char **argv){
 
     //write to file
     ofstream myfile;
-    myfile.open("embed_func_sphere.txt");
+    myfile.open("embed_funcs/sphere.txt");
     for(int i=0; i<F->dims[0]; i++){
         for(int j=0; j<F->dims[1]; j++){
             for(int k=0; k<F->dims[2]; k++){
-                myfile<<i<<","<<j<<","<<k<<","<<F->voxels[i][j][k]<<endl;
+                myfile<<i<<","<<j<<","<<k<<","<<(*F)[i][j][k]<<endl;
             }
         }
     }

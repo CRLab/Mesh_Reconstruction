@@ -1,28 +1,21 @@
-#include <pcl/point_types.h>
-#include <pcl/io/pcd_io.h>
-#include <pcl/kdtree/kdtree_flann.h>
-#include <pcl/surface/mls.h>
-#include <boost/thread/thread.hpp>
-#include <pcl/common/common_headers.h>
-#include <pcl/features/normal_3d.h>
 #include <pcl/visualization/pcl_visualizer.h>
 #include <pcl/console/parse.h>
-
-#include "voxelize.h"
 
 #include "binvoxToPcl.h"
 #include "assign_confidence.h"
 
 #include "ConstConf.h"
 
-#include "getsqdist.h"
+#include "voxelize.h"
+
 #include "narrowBand.h"
 
-#include <iostream>
 
 using namespace std;
 
 typedef unsigned char byte;
+
+typedef boost::shared_ptr<grid> gridPtr;
 
 int main(int argc, char **argv){
     //convert binvox to pcl
@@ -40,12 +33,8 @@ int main(int argc, char **argv){
     exit(1);
     }
 
-    binvox vox;
-    if(!read_binvox(&vox, argv[1])){
-        cout << "Error reading [" << argv[1] << "]" << endl << endl;
-        exit(1);
-    }
-    pcl::PointCloud<pcl::PointXYZ>::Ptr predictCloud = binvoxToPCL(argv[1]);
+    int res = getResolutionFactor(argv[1], observeCloud);
+    pcl::PointCloud<pcl::PointXYZ>::Ptr predictCloud = binvoxToPCL(argv[1], res);
 
     //combine into pcl_conf with confidences
     Confidencor *confidence_assigner = new ConstConf(0); //<--- change confidencor function here
@@ -57,16 +46,10 @@ int main(int argc, char **argv){
     assign_confidence(confPCL, predictCloud, confidence_assigner);
 
     //voxelize the data
-    voxelized_dataPtr data = voxelizeData(confPCL, 1.0); //<--test different resolutions
-
-
-
-
-
-
+    voxelized_dataPtr data = voxelizeData(confPCL); //<--test different resolutions
 
     //create grids
-    gridPtr grid_cloud = createGrid(data->filtered_cloud, data->grid_data);
+    gridPtr grid_cloud = createGrid(data->filtered_cloud, data->grid_data, res);
     gridPtr volume = getBinaryVolume(grid_cloud);
     gridPtr margin = getsqrt(getsqdist(volume));
 
@@ -81,7 +64,7 @@ int main(int argc, char **argv){
     for(int i=0; i<bnds->band->dims[0]; i++){
         for(int j=0; j<bnds->band->dims[1]; j++){
             for(int k=0; k<bnds->band->dims[2]; k++){
-                if(bnds->band->voxels[i][j][k]==1.0){
+                if((*(bnds->band))[i][j][k]==1.0){
                     pcl::InterestPoint pnt;
                     pnt.x=(float)i; pnt.y=(float)j; pnt.z=(float)k;
                     pnt.strength=0;
@@ -94,7 +77,7 @@ int main(int argc, char **argv){
     for(int i=0; i<bnds->tight_band->dims[0]; i++){
         for(int j=0; j<bnds->tight_band->dims[1]; j++){
             for(int k=0; k<bnds->tight_band->dims[2]; k++){
-                if(bnds->tight_band->voxels[i][j][k]==1.0){
+                if((*(bnds->tight_band))[i][j][k]==1.0){
                     pcl::InterestPoint pnt;
                     pnt.x=(float)i+0.01; pnt.y=(float)j+0.01; pnt.z=(float)k+0.01;
                     pnt.strength=0;
@@ -107,7 +90,7 @@ int main(int argc, char **argv){
     //visualize
     boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer (new pcl::visualization::PCLVisualizer ("3D Viewer"));
     viewer->setBackgroundColor (0, 0, 0);
-    pcl::visualization::PointCloudColorHandlerCustom<pcl::InterestPoint> single_color(data->filtered_cloud, 0, 255, 0);
+    //pcl::visualization::PointCloudColorHandlerCustom<pcl::InterestPoint> single_color(data->filtered_cloud, 0, 255, 0);
     pcl::visualization::PointCloudColorHandlerCustom<pcl::InterestPoint> single_color_tightband(pcl_tightband, 0, 0, 255);
     pcl::visualization::PointCloudColorHandlerCustom<pcl::InterestPoint> single_color_band(pcl_band, 255, 0, 0);
     //viewer->addPointCloud<pcl::InterestPoint> (data->filtered_cloud, single_color, "cloud");
@@ -123,7 +106,6 @@ int main(int argc, char **argv){
         viewer->spinOnce (100);
         boost::this_thread::sleep (boost::posix_time::microseconds (100000));
     }
-
 
 
     return 1;

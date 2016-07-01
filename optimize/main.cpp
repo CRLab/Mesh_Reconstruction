@@ -1,26 +1,16 @@
-#include <pcl/point_types.h>
-#include <pcl/io/pcd_io.h>
-#include <pcl/kdtree/kdtree_flann.h>
-#include <pcl/surface/mls.h>
-#include <boost/thread/thread.hpp>
-#include <pcl/common/common_headers.h>
-#include <pcl/features/normal_3d.h>
-#include <pcl/visualization/pcl_visualizer.h>
-#include <pcl/console/parse.h>
-
-#include "voxelize.h"
 
 #include "binvoxToPcl.h"
 #include "assign_confidence.h"
 
 #include "ConstConf.h"
 
+#include "voxelize.h"
+
 #include "getsqdist.h"
 #include "narrowBand.h"
 
 #include "quadprog.h"
 
-#include <iostream>
 
 using namespace std;
 using namespace lemp;
@@ -43,7 +33,8 @@ int main(int argc, char **argv){
     exit(1);
     }
 
-    pcl::PointCloud<pcl::PointXYZ>::Ptr predictCloud = binvoxToPCL(argv[1]);
+    int res = getResolutionFactor(argv[1], observeCloud);
+    pcl::PointCloud<pcl::PointXYZ>::Ptr predictCloud = binvoxToPCL(argv[1], res);
 
     //combine into pcl_conf with confidences
     Confidencor *confidence_assigner = new ConstConf(1); //<--- change confidencor function here
@@ -55,10 +46,10 @@ int main(int argc, char **argv){
     assign_confidence(confPCL, predictCloud, confidence_assigner);
 
     //voxelize the data
-    voxelized_dataPtr data = voxelizeData(confPCL, 1.0); //<--test different resolutions
+    voxelized_dataPtr data = voxelizeData(confPCL); //<--test different resolutions
 
     //create grids
-    gridPtr grid_cloud = createGrid(data->filtered_cloud, data->grid_data);
+    gridPtr grid_cloud = createGrid(data->filtered_cloud, data->grid_data, res);
     gridPtr volume = getBinaryVolume(grid_cloud);
 
     //get imbedding function
@@ -67,11 +58,11 @@ int main(int argc, char **argv){
 
     //write to file
     ofstream myfile;
-    myfile.open("embed_func_test.txt");
+    myfile.open("../embed_funcs/test.txt");
     for(int i=0; i<F->dims[0]; i++){
         for(int j=0; j<F->dims[1]; j++){
             for(int k=0; k<F->dims[2]; k++){
-                myfile<<i<<","<<j<<","<<k<<","<<F->voxels[i][j][k]<<endl;
+                myfile<<i<<","<<j<<","<<k<<","<<(*F)[i][j][k]<<endl;
             }
         }
     }

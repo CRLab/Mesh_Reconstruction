@@ -1,23 +1,35 @@
-#include <pcl/kdtree/kdtree_flann.h>
-#include <pcl/surface/mls.h>
-#include <boost/thread/thread.hpp>
-#include <pcl/common/common_headers.h>
-#include <pcl/features/normal_3d.h>
-#include <pcl/visualization/pcl_visualizer.h>
-#include <pcl/console/parse.h>
-
-#include <pcl/conversions.h>
-#include <pcl/point_cloud.h>
-#include <pcl/point_types.h>
-#include <pcl/filters/voxel_grid.h>
-#include <pcl/io/pcd_io.h>
-#include <pcl/octree/octree.h>
-
-#include <iostream>
 
 #include "voxelize.h"
 
 using namespace std;
+
+float getResolution(pcl::PointCloud<pcl::InterestPoint>::Ptr cloud){
+    //create new cloud missing every ten points
+    pcl::PointCloud<pcl::InterestPoint>::Ptr new_cloud (new pcl::PointCloud<pcl::InterestPoint>());
+    for(int i=0; i<cloud->points.size(); i++){
+        if((i%10)>0){
+            new_cloud->push_back(cloud->points[i]);
+        }
+    }
+
+    //create kd tree
+    pcl::KdTreeFLANN<pcl::InterestPoint> kdtree;
+    kdtree.setInputCloud(new_cloud);
+
+    float distTotal = 0.0;
+    int count = 0;
+    for(int i=0; i<cloud->points.size(); i+=10){
+        //perform nearest neighbor search
+        vector<int> pointIdxNKNSearch(1);
+        vector<float> pointNKNSquaredDistance(1);
+        kdtree.nearestKSearch(cloud->points[i], 1, pointIdxNKNSearch, pointNKNSquaredDistance);
+        //get distance
+        distTotal += (float) sqrt((double)pointNKNSquaredDistance[0]);
+        count++;
+    }
+
+    return 2.0*distTotal/(float)count;
+}
 
 VoxelGridPtr voxelize(pcl::PointCloud<pcl::InterestPoint>::Ptr input, pcl::PointCloud<pcl::InterestPoint>::Ptr output, float resolution){
 
@@ -72,10 +84,12 @@ void modifyStrengths(pcl::PointCloud<pcl::InterestPoint>::Ptr filtered_cloud,
     }//end of loop through voxel grid
 }
 
-voxelized_dataPtr voxelizeData(pcl::PointCloud<pcl::InterestPoint>::Ptr cloud, float resolution){
+voxelized_dataPtr voxelizeData(pcl::PointCloud<pcl::InterestPoint>::Ptr cloud){
     //create dummy object
     pcl::PointCloud<pcl::InterestPoint>::Ptr dummy (new pcl::PointCloud<pcl::InterestPoint>());
 
+    float resolution = getResolution(cloud);
+    cout<<"Leaf size is "<<resolution<<endl;
     voxelized_dataPtr data (new voxelized_data());
     data->resolution=resolution;
     data->input_cloud=cloud;

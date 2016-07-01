@@ -2,22 +2,14 @@
 #define VOXELIZE_H
 
 #include <pcl/kdtree/kdtree_flann.h>
-#include <pcl/surface/mls.h>
 #include <boost/thread/thread.hpp>
-#include <pcl/common/common_headers.h>
-#include <pcl/features/normal_3d.h>
 #include <pcl/visualization/pcl_visualizer.h>
 #include <pcl/console/parse.h>
 
-#include <pcl/conversions.h>
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 #include <pcl/filters/voxel_grid.h>
-#include <pcl/io/pcd_io.h>
-#include <pcl/PCLPointCloud2.h>
 #include <pcl/octree/octree.h>
-
-#include <iostream>
 
 using namespace std;
 
@@ -48,7 +40,7 @@ void modifyStrengths(VoxelGridPtr grid, pcl::PointCloud<pcl::InterestPoint>::Ptr
 
 
 //function for creating voxelized point cloud
-voxelized_dataPtr voxelizeData(pcl::PointCloud<pcl::InterestPoint>::Ptr cloud, float resolution);
+voxelized_dataPtr voxelizeData(pcl::PointCloud<pcl::InterestPoint>::Ptr cloud);
 
 //show point clouds in visualizer
 void visualizeData(voxelized_dataPtr data);

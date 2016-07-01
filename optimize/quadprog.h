@@ -2,12 +2,8 @@
 #define QUADPROG_H
 
 #include <math.h>
-#include <stdlib.h>
-#include <memory.h>
-#include <iostream>
 
 #include "primeqp.h"
-#include "narrowBand.h"
 
 namespace lemp
 {

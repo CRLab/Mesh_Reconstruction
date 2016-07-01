@@ -1,10 +1,3 @@
-#include <math.h>
-#include <stdlib.h>
-#include <memory.h>
-#include <iostream>
-
-#include "primeqp.h"
-#include "narrowBand.h"
 
 #include "quadprog.h"
 
@@ -99,13 +92,6 @@ vector<float> runQP(qp_argsPtr args){
         for(int r = 0; r < size; r++){
             doStep(r, *in, *out, ir, jc, pr, args->invdg, args->lb, args->ub);
         }
-        /*
-        float sum=0;
-        for(int i=0; i<out->size(); i++){
-            sum+=(*out)[i]-args->x[i];
-        }
-        cout<<sum<<endl;
-        */
     }
 
     cout<<"quadratic program finished"<<endl;
@@ -121,10 +107,13 @@ gridPtr optimize(gridPtr volume){
     //prime quadratic programming arguments
     //prepare margin
     gridPtr margin = getsqrt(getsqdist(fastPerim(volume)));
+    cout<<"margin calculated"<<endl;
     //prepare bands
     bandsPtr bnds = createBands(margin, BAND_SIZE);
+    cout<<"bands created"<<endl;
     //get band point indexes
     vector<int> indexes = findIndexes(bnds->band);
+    cout<<"indexes stored"<<endl;
 
     //prepare qp_args
     qp_argsPtr args = primeQP(volume, margin, bnds);
@@ -138,15 +127,12 @@ gridPtr optimize(gridPtr volume){
     for(int i=0; i<F->dims[0]; i++){
         for(int j=0; j<F->dims[1]; j++){
             for(int k=0; k<F->dims[2]; k++){
-                F->voxels[i][j][k]=((2.0*F->voxels[i][j][k])-1.0)*(BAND_SIZE+1.0);
-                //cout<<F->voxels[i][j][k]<<endl;
+                (*F)[i][j][k]=(2.0*(*F)[i][j][k]-1.0)*(BAND_SIZE+1.0);
             }
         }
     }
     for(int i=0; i<indexes.size(); i++){
-        Eigen::Vector3i pnt = ind2sub(indexes[i], F->dims);
-        F->voxels[pnt[0]][pnt[1]][pnt[2]] = x[i];
-        //cout<<x[i]<<endl;
+        (*F)(indexes[i]) = x[i];
     }
 
     return F;
