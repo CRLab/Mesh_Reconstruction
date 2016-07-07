@@ -6,14 +6,12 @@
 
 #include "voxelize.h"
 
-#include "getsqdist.h"
 #include "narrowBand.h"
 
 #include "quadprog.h"
 
 
 using namespace std;
-using namespace lemp;
 
 typedef unsigned char byte;
 
@@ -70,7 +68,7 @@ int main(int argc, char **argv){
 
 
     //visualize
-    visualizeGrid(F);
+    F->visualize();
 
     return 1;
 }

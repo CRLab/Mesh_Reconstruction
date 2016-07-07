@@ -57,7 +57,7 @@ void grid::deallocGrid(){
     delete [] voxels;
 }
 
-grid::grid(Eigen::Vector3i dims_in, Eigen::Vector3i t_in){
+grid::grid(const Eigen::Vector3i &dims_in, const Eigen::Vector3i &t_in){
     dims=dims_in;
     t_=t_in;
     allocGrid();
@@ -147,7 +147,7 @@ Eigen::Vector3i grid::ind2sub(int linear_index){
     return subs;
 }
 //convert vector subscript to linear index
-int grid::sub2ind(Eigen::Vector3i subs){
+int grid::sub2ind(const Eigen::Vector3i &subs){
     return subs[2]*dims[0]*dims[1]+subs[1]*dims[0]+subs[0];
 }
 //get value using linear indexing
@@ -229,4 +229,131 @@ void grid::fillGrid(int res_factor){
             }//end of z column
         }
     }//end if iteration
+}
+
+//function for pcl visualization of grid
+void grid::visualize(){
+    //convert imbedding function to point cloud for visualization
+    //create point clouds from bands for visualization
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr pcl_grid (new pcl::PointCloud<pcl::PointXYZRGB>());
+    for(int i=0; i<dims[0]; i++){
+        for(int j=0; j<dims[1]; j++){
+            for(int k=0; k<dims[2]; k++){
+                if(voxels[i][j][k]>0){
+                    pcl::PointXYZRGB pnt;
+                    pnt.x=(float)i; pnt.y=(float)j; pnt.z=(float)k;
+                    pnt.r=0;pnt.g=0;pnt.b=255;
+                    pcl_grid->push_back(pnt);
+                }
+                else if(voxels[i][j][k]<0){
+                    pcl::PointXYZRGB pnt;
+                    pnt.x=(float)i; pnt.y=(float)j; pnt.z=(float)k;
+                    pnt.r=0;pnt.g=0;pnt.b=0;
+                    pcl_grid->push_back(pnt);
+                }
+                else{
+                    pcl::PointXYZRGB pnt;
+                    pnt.x=(float)i; pnt.y=(float)j; pnt.z=(float)k;
+                    pnt.r=0;pnt.g=255;pnt.b=0;
+                    pcl_grid->push_back(pnt);
+                }
+            }
+        }
+    }
+
+    //visualize
+    //display in visualizor
+    boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer (new pcl::visualization::PCLVisualizer ("3D Viewer"));
+    viewer->setBackgroundColor (0, 0, 0);
+    pcl::visualization::PointCloudColorHandlerRGBField<pcl::PointXYZRGB> rgb(pcl_grid);
+    viewer->addPointCloud<pcl::PointXYZRGB> (pcl_grid, rgb, "cloud");
+    viewer->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, "cloud");
+    viewer->addCoordinateSystem (1.0);
+    viewer->initCameraParameters ();
+    while (!viewer->wasStopped ())
+    {
+        viewer->spinOnce (100);
+        boost::this_thread::sleep (boost::posix_time::microseconds (100000));
+    }
+}
+
+//get create grid with confidences
+gridPtr createGrid(pcl::PointCloud<pcl::InterestPoint>::Ptr grid_cloud, VoxelGridPtr vox, int res_factor){
+    Eigen::Vector3i t_ = vox->getMinBoxCoordinates();
+    Eigen::Vector3i dims = vox->getNrDivisions();
+    //pad the grid with empty voxels 5 on each side
+    int pad= 6;
+    dims[0]+=pad*2; dims[1]+=pad*2; dims[2]+=pad*2;
+    t_[0]-=pad; t_[1]-=pad; t_[2]-=pad;
+    gridPtr gp(new grid(dims, t_));
+    for(int i=0; i<gp->dims[0]; i++){
+        for(int j=0; j<gp->dims[1]; j++){
+            for(int k=0; k<gp->dims[2]; k++){
+                Eigen::Vector3i pnt;
+                pnt[0]=i+gp->t_[0]; pnt[1]=j+gp->t_[1]; pnt[2]=k+gp->t_[2];
+                int index = vox->getCentroidIndexAt(pnt);
+                if(index!=-1) (*gp)[i][j][k] = grid_cloud->points[index].strength;
+                else (*gp)[i][j][k]=-1.0;
+
+                if(i<pad||i>=gp->dims[0]-pad||j<pad||j>=gp->dims[1]-pad||k<pad||k>=gp->dims[2]-pad){
+                    (*gp)[i][j][k]=-1.0;
+                }
+            }
+        }
+    }
+
+    //fill in any holes between observed and completed clouds
+    gp->fillGrid(res_factor);
+    return gp;
+}
+
+//create binary volume grid from confidence grid
+gridPtr getBinaryVolume(gridPtr grid_cloud){
+    gridPtr g(new grid(grid_cloud->dims, grid_cloud->t_));
+    for(int i=0; i<g->dims[0]; i++){
+        for(int j=0; j<g->dims[1]; j++){
+            for(int k=0; k<g->dims[2]; k++){
+                if((*grid_cloud)[i][j][k]>=0) (*g)[i][j][k]=1.0;
+                else (*g)[i][j][k]=0.0;
+            }
+        }
+    }
+    return g;
+}
+
+//copy grid
+gridPtr copyGrid(gridPtr in){
+    gridPtr g(new grid(*in));
+    return g;
+}
+
+//add 2 grids voxel by voxel
+gridPtr addGrids(gridPtr in1, gridPtr in2){
+    gridPtr g(new grid(in1->dims, in1->t_));
+    *g = ((*in1)+(*in2));
+    return g;
+}
+
+//get linear indices of all non-zero voxels in grid
+vector<int> findIndexes(gridPtr band){
+    vector<int> indexes_copy (band->dims[0]*band->dims[1]*band->dims[2], 0);
+    int num_ind = 0;
+    for(int i=0; i<band->dims[0]; i++){
+        for(int j=0; j<band->dims[1]; j++){
+            for(int k=0; k<band->dims[2]; k++){
+                if((*band)[i][j][k]!=0.0){
+                    Eigen::Vector3i pnt;
+                    pnt[0]=i; pnt[1]=j; pnt[2]=k;
+                    indexes_copy[num_ind] = band->sub2ind(pnt);
+                    num_ind++;
+                }
+            }
+        }
+    }
+    //resize indexes
+    vector<int> indexes(num_ind, 0);
+    for(int i=0; i<num_ind; i++){
+        indexes[i] = indexes_copy[i];
+    }
+    return indexes;
 }

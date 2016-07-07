@@ -13,15 +13,6 @@ using namespace std;
 
 typedef unsigned char byte;
 
-
-
-static int version;
-static int depth, height, width;
-static int size;
-static byte *voxels = 0;
-static float tx, ty, tz;
-static float scale;
-
 struct binvox{
     int version;
     int depth, height, width;
@@ -32,7 +23,7 @@ struct binvox{
 
 };
 
-int get_index(binvox vox, int x, int y, int z);
+int get_index(const binvox &vox, int x, int y, int z);
 
 int read_binvox(binvox* vox, string filespec);
 

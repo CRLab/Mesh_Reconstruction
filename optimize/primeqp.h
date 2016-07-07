@@ -9,9 +9,6 @@
 
 #include "narrowBand.h"
 
-namespace lemp
-{
-
 using namespace std;
 
 //linear indexing is used throughout
@@ -29,27 +26,18 @@ struct qp_args{
 };
 typedef boost::shared_ptr<qp_args> qp_argsPtr;
 
-//get linear indices of all non-zero voxels in grid
-vector<int> findIndexes(gridPtr band);
-
 //create index map
-gridPtr getIndexMap(gridPtr band, vector<int>& indexes);
+gridPtr getIndexMap(gridPtr band, const vector<int>& indexes);
 
 //make H matrix
 SparseMatrixPtr getHMat(gridPtr tightBand, gridPtr indexMap);
 
 //get lower bound vector
-vector<float> getlb(gridPtr margin, gridPtr volume, vector<int>& indexes);
+vector<float> getlb(gridPtr margin, gridPtr volume, const vector<int>& indexes);
 //get upper bound vector
-vector<float> getub(gridPtr margin, gridPtr volume, vector<int>& indexes);
+vector<float> getub(gridPtr margin, gridPtr volume, const vector<int>& indexes);
 
 //prepare quadratic program arguments
 qp_argsPtr primeQP(gridPtr volume, gridPtr margin, bandsPtr bnds);
-
-//visualize grid data
-void visualizeGrid(gridPtr grid);
-
-}
-
 
 #endif

@@ -4,6 +4,8 @@
 #include <pcl/point_types.h>
 #include <boost/thread/thread.hpp>
 #include <pcl/filters/voxel_grid.h>
+#include <pcl/visualization/pcl_visualizer.h>
+#include <pcl/console/parse.h>
 
 #include <stdlib.h>
 
@@ -50,7 +52,7 @@ public:
     y_z operator[](int index);
 
     //construct unfilled grid with dimensions and translation
-    grid(Eigen::Vector3i dims_in, Eigen::Vector3i t_in);
+    grid(const Eigen::Vector3i &dims_in, const Eigen::Vector3i &t_in);
     //copy constructor
     grid(grid& other);
 
@@ -66,7 +68,7 @@ public:
     //convert linear index to vector subscript
     Eigen::Vector3i ind2sub(int linear_index);
     //convert vector subscript to linear index
-    int sub2ind(Eigen::Vector3i subs);
+    int sub2ind(const Eigen::Vector3i &subs);
     //get value using linear indexing
     float& operator()(int index);
 
@@ -74,7 +76,24 @@ public:
 
     void fillGrid(int res_factor);
 
+    void visualize();
 
 };
+typedef boost::shared_ptr<grid> gridPtr;
+
+//create grid with confidences
+gridPtr createGrid(pcl::PointCloud<pcl::InterestPoint>::Ptr grid_cloud, VoxelGridPtr vox, int res_factor);
+
+//create binary volume grid from confidence grid
+gridPtr getBinaryVolume(gridPtr grid_cloud);
+
+//copy grid
+gridPtr copyGrid(gridPtr in);
+
+//add 2 grids voxel by voxel
+gridPtr addGrids(gridPtr in1, gridPtr in2);
+
+//get linear indices of all non-zero voxels in grid
+vector<int> findIndexes(gridPtr band);
 
 #endif

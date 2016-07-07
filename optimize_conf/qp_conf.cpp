@@ -46,9 +46,9 @@ vector<float> getPr(SparseMatrixPtr R){
 }
 
 //row increment
-void doStep(int row, vector<float>& in, vector<float>& out,
-    vector<int>& ir, vector<int>& jc, vector<float>& pr,
-    vector<float>& lb, vector<float>& ub)
+void doStep(int row, const vector<float> &in, vector<float> &out,
+    const vector<int> &ir, const vector<int> &jc, const vector<float> &pr,
+    const vector<float> &lb, const vector<float> &ub)
 {
     float res = 0;
     int start = jc[row];

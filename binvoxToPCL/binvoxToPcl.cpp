@@ -6,7 +6,7 @@ using namespace std;
 typedef unsigned char byte;
 
 
-int get_index(binvox vox, int x, int y, int z){
+int get_index(const binvox &vox, int x, int y, int z){
     int wxh = vox.width*vox.height;
     int index = x*wxh + z*vox.width + y;
     return index;

@@ -53,87 +53,6 @@ gridPtr applyConfidence(gridPtr confGrid){
     return margin;
 }
 
-//returns linear indexes of closes 0-value voxel
-gridPtr getsqdist_index(gridPtr volume_grid){
-    //make copies
-    gridPtr index_grid;
-    gridPtr index_grid_copy = copyGrid(volume_grid);
-    gridPtr dist_grid = copyGrid(volume_grid);
-    gridPtr dist_grid_copy = copyGrid(dist_grid);
-    //first transformation
-    for(int i=0; i<dist_grid->dims[0]; i++){
-        for(int j=0; j<dist_grid->dims[1]; j++){
-            for(int k=0; k<dist_grid->dims[2]; k++){
-                //get squared dist to closest 0 in row (i's)
-                float min = 100000;
-                float x_ind = -1.0;
-                for(int index=0; index<dist_grid->dims[0]; index++){
-                    float dist = 100000;
-                    if((*dist_grid)[index][j][k]==0.0){
-                        dist = (index-i)*(index-i);
-                    }
-                    if(dist<min){
-                        min=dist;
-                        x_ind = index;
-                    }
-                }
-                //set value of voxel to min q dist
-                (*dist_grid_copy)[i][j][k]=min;
-                //set index value to x index
-                (*index_grid_copy)[i][j][k]=x_ind;
-            }
-        }
-    }//end of first transformation
-
-    index_grid=copyGrid(index_grid_copy);
-    dist_grid=copyGrid(dist_grid_copy);
-    //second transformation
-    for(int i=0; i<dist_grid->dims[0]; i++){
-        for(int j=0; j<dist_grid->dims[1]; j++){
-            for(int k=0; k<dist_grid->dims[2]; k++){
-                int min = 100000;
-                float xy_ind = -1.0;
-                for(int index=0; index<dist_grid->dims[1]; index++){
-                    int dist = (*dist_grid)[i][index][k] + (index-j)*(index-j);
-                    if(dist<min){
-                        min=dist;
-                        xy_ind = (float)(index*index_grid->dims[0])+(*index_grid)[i][index][k];
-                    }
-                }
-                //set value of voxel to min q dist
-                (*dist_grid_copy)[i][j][k]=(float)min;
-                (*index_grid_copy)[i][j][k] = xy_ind;
-            }
-        }
-    }//end of second transformation
-
-    index_grid=copyGrid(index_grid_copy);
-    dist_grid=copyGrid(dist_grid_copy);
-    //third transformation
-    for(int i=0; i<dist_grid->dims[0]; i++){
-        for(int j=0; j<dist_grid->dims[1]; j++){
-            for(int k=0; k<dist_grid->dims[2]; k++){
-                int min = 100000;
-                float xyz_ind=-1.0;
-                for(int index=0; index<dist_grid->dims[2]; index++){
-                    int dist = (*dist_grid)[i][j][index] + (index-k)*(index-k);
-                    if(dist<min){
-                        min=dist;
-                        xyz_ind = (float)(index*index_grid->dims[0]*index_grid->dims[1])+(*index_grid)[i][j][index];
-                    }
-                }
-                //set value of voxel to min q dist
-                (*dist_grid_copy)[i][j][k]=(float)min;
-                (*index_grid_copy)[i][j][k] = xyz_ind;
-            }
-        }
-    }//end of third transformation
-
-    return index_grid_copy;
-
-}
-
-
 //solve for inverse of sparse matrix
 SparseMatrixPtr getInverse(SparseMatrixPtr in){
     Eigen::SparseMatrix<float> I(in->cols(),in->cols());
@@ -147,7 +66,7 @@ SparseMatrixPtr getInverse(SparseMatrixPtr in){
 }
 
 //create diagonal confidence matrix
-SparseMatrixPtr getCMat(gridPtr confGrid, vector<int>& indexes){
+SparseMatrixPtr getCMat(gridPtr confGrid, const vector<int> &indexes){
     //create triplet list
     vector<Eigen::Triplet<float> > tripletList;
     tripletList.reserve(indexes.size());
@@ -173,7 +92,7 @@ vector<Eigen::Triplet<float> > getTriplets(SparseMatrixPtr in){
     return out;
 }
 //function for comparing triplets by row major order
-bool compRow(Eigen::Triplet<float> in1, Eigen::Triplet<float> in2){
+bool compRow(const Eigen::Triplet<float> &in1, const Eigen::Triplet<float> &in2){
     if(in1.row()<in2.row()) return true;
     else if(in1.row()==in2.row()){
         return (in1.col()<in2.col());
@@ -181,13 +100,13 @@ bool compRow(Eigen::Triplet<float> in1, Eigen::Triplet<float> in2){
     else return false;
 }
 //reorder triplets by row major order
-void sortByRow(vector<Eigen::Triplet<float> >& in){
-    bool (*comp)(Eigen::Triplet<float> in1, Eigen::Triplet<float> in2);
+void sortByRow(vector<Eigen::Triplet<float> > &in){
+    bool (*comp)(const Eigen::Triplet<float> &in1, const Eigen::Triplet<float> &in2);
     comp = &compRow;
     sort(in.begin(), in.end(), comp);
 }
 //function for multiplying sparse matrix by vector
-vector<float> multiplyMatVec(SparseMatrixPtr mat, vector<float>& vec){
+vector<float> multiplyMatVec(SparseMatrixPtr mat, vector<float> &vec){
     if(mat->cols()!=vec.size()){
         cerr<<"Matrix and vector sizes must match"<<endl;
         return vec;
@@ -209,7 +128,7 @@ vector<float> multiplyMatVec(SparseMatrixPtr mat, vector<float>& vec){
     return out;
 }
 //function for adding two vectors
-vector<float> addVec(vector<float>& in1, vector<float>& in2){
+vector<float> addVec(vector<float> &in1, const vector<float> &in2){
     if(in1.size()!=in2.size()){
         cerr<<"Vector sizes must match"<<endl;
         return in1;
@@ -221,7 +140,7 @@ vector<float> addVec(vector<float>& in1, vector<float>& in2){
     return out;
 }
 //function for subtracting two vectors
-vector<float> subtractVec(vector<float>& in1, vector<float>& in2){
+vector<float> subtractVec(vector<float> &in1, const vector<float> &in2){
     if(in1.size()!=in2.size()){
         return in1;
     }
@@ -233,7 +152,7 @@ vector<float> subtractVec(vector<float>& in1, vector<float>& in2){
 }
 
 //function for getting z vector
-vector<float> getZVec(SparseMatrixPtr R, SparseMatrixPtr C, vector<float> x_0){
+vector<float> getZVec(SparseMatrixPtr R, SparseMatrixPtr C, vector<float> &x_0){
     SparseMatrixPtr M (new Eigen::SparseMatrix<float>((*R)+(*C)));
     cout<<"computing inverse"<<endl;
     *M = (*getInverse(M))*(*C);
@@ -246,33 +165,8 @@ vector<float> getZVec(SparseMatrixPtr R, SparseMatrixPtr C, vector<float> x_0){
 
 //**********************************************************************
 
-
-//get linear indices of all non-zero voxels in grid
-vector<int> findIndexes(gridPtr band){
-    vector<int> indexes_copy (band->dims[0]*band->dims[1]*band->dims[2], 0);
-    int num_ind = 0;
-    for(int i=0; i<band->dims[0]; i++){
-        for(int j=0; j<band->dims[1]; j++){
-            for(int k=0; k<band->dims[2]; k++){
-                if((*band)[i][j][k]!=0.0){
-                    Eigen::Vector3i pnt;
-                    pnt[0]=i; pnt[1]=j; pnt[2]=k;
-                    indexes_copy[num_ind] = band->sub2ind(pnt);
-                    num_ind++;
-                }
-            }
-        }
-    }
-    //resize indexes
-    vector<int> indexes(num_ind, 0);
-    for(int i=0; i<num_ind; i++){
-        indexes[i] = indexes_copy[i];
-    }
-    return indexes;
-}
-
 //create index map
-gridPtr getIndexMap(gridPtr band, vector<int>& indexes){
+gridPtr getIndexMap(gridPtr band, const vector<int> &indexes){
     gridPtr map_(new grid(band->dims, band->t_));
     //set all values to -1
     for(int i=0; i<map_->dims[0]; i++){
@@ -399,7 +293,7 @@ SparseMatrixPtr getHMat(gridPtr tightBand, gridPtr indexMap){
 
 
 //get lower bound vector
-vector<float> getlb(gridPtr margin, gridPtr volume, vector<int>& indexes){
+vector<float> getlb(gridPtr margin, gridPtr volume, const vector<int> &indexes){
     //make a copy of margin
     //set values outside of volume to -1000
     gridPtr lbnd (new grid(margin->dims, margin->t_));
@@ -425,7 +319,7 @@ vector<float> getlb(gridPtr margin, gridPtr volume, vector<int>& indexes){
     return lb;
 }
 //get upper bound vector
-vector<float> getub(gridPtr margin, gridPtr volume, vector<int>& indexes){
+vector<float> getub(gridPtr margin, gridPtr volume, const vector<int> &indexes){
     //make a copy of negative margin
     //set values inside of volume to 1000
     gridPtr ubnd (new grid(margin->dims, margin->t_));
@@ -520,52 +414,6 @@ qp_argsPtr primeQP(gridPtr confGrid, gridPtr volume, gridPtr margin, bandsPtr bn
 
     cout<<"quadratic program ready"<<endl;
     return out;
-}
-
-void visualizeGrid(gridPtr grid){
-    //convert imbedding function to point cloud for visualization
-    //create point clouds from bands for visualization
-    pcl::PointCloud<pcl::PointXYZRGB>::Ptr pcl_grid (new pcl::PointCloud<pcl::PointXYZRGB>());
-    for(int i=0; i<grid->dims[0]; i++){
-        for(int j=0; j<grid->dims[1]; j++){
-            for(int k=0; k<grid->dims[2]; k++){
-                if((*grid)[i][j][k]>0){
-                    pcl::PointXYZRGB pnt;
-                    pnt.x=(float)i; pnt.y=(float)j; pnt.z=(float)k;
-                    pnt.r=0;pnt.g=0;pnt.b=255;
-                    pcl_grid->push_back(pnt);
-                }
-                else if((*grid)[i][j][k]<0){
-                    pcl::PointXYZRGB pnt;
-                    pnt.x=(float)i; pnt.y=(float)j; pnt.z=(float)k;
-                    pnt.r=0;pnt.g=0;pnt.b=0;
-                    pcl_grid->push_back(pnt);
-                }
-                else{
-                    pcl::PointXYZRGB pnt;
-                    pnt.x=(float)i; pnt.y=(float)j; pnt.z=(float)k;
-                    pnt.r=0;pnt.g=255;pnt.b=0;
-                    pcl_grid->push_back(pnt);
-                }
-            }
-        }
-    }
-
-    //visualize
-    //display in visualizor
-    boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer (new pcl::visualization::PCLVisualizer ("3D Viewer"));
-    viewer->setBackgroundColor (0, 0, 0);
-    pcl::visualization::PointCloudColorHandlerRGBField<pcl::PointXYZRGB> rgb(pcl_grid);
-    viewer->addPointCloud<pcl::PointXYZRGB> (pcl_grid, rgb, "cloud");
-    viewer->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, "cloud");
-    viewer->addCoordinateSystem (1.0);
-    viewer->initCameraParameters ();
-    while (!viewer->wasStopped ())
-    {
-        viewer->spinOnce (100);
-        boost::this_thread::sleep (boost::posix_time::microseconds (100000));
-    }
-
 }
 
 }

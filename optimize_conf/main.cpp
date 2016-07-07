@@ -8,7 +8,6 @@
 
 #include "voxelize.h"
 
-#include "getsqdist.h"
 #include "narrowBand.h"
 
 #include "qp_conf.h"
@@ -72,7 +71,7 @@ int main(int argc, char **argv){
 
 
     //visualize
-    visualizeGrid(F);
+    F->visualize();
 
     return 1;
 }

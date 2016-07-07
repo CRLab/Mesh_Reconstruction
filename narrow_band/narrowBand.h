@@ -1,7 +1,8 @@
 #ifndef NARROWBAND_H
 #define NARROWBAND_H
 
-#include "getsqdist.h"
+#include "dfields.h"
+#include "grid.h"
 
 using namespace std;
 

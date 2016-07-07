@@ -1,41 +1,13 @@
 
 #include "primeqp.h"
 
-namespace lemp
-{
-
 using namespace std;
 
 //linear indexing is used throughout
 //linear index = z*num_x*num_y + y*num_x + x;
 
-
-//get linear indices of all non-zero voxels in grid
-vector<int> findIndexes(gridPtr band){
-    vector<int> indexes_copy (band->dims[0]*band->dims[1]*band->dims[2], 0);
-    int num_ind = 0;
-    for(int i=0; i<band->dims[0]; i++){
-        for(int j=0; j<band->dims[1]; j++){
-            for(int k=0; k<band->dims[2]; k++){
-                if((*band)[i][j][k]!=0.0){
-                    Eigen::Vector3i pnt;
-                    pnt[0]=i; pnt[1]=j; pnt[2]=k;
-                    indexes_copy[num_ind] = band->sub2ind(pnt);
-                    num_ind++;
-                }
-            }
-        }
-    }
-    //resize indexes
-    vector<int> indexes(num_ind, 0);
-    for(int i=0; i<num_ind; i++){
-        indexes[i] = indexes_copy[i];
-    }
-    return indexes;
-}
-
 //create index map
-gridPtr getIndexMap(gridPtr band, vector<int>& indexes){
+gridPtr getIndexMap(gridPtr band, const vector<int>& indexes){
     gridPtr map_(new grid(band->dims, band->t_));
     //set all values to -1
     for(int i=0; i<map_->dims[0]; i++){
@@ -162,7 +134,7 @@ SparseMatrixPtr getHMat(gridPtr tightBand, gridPtr indexMap){
 }
 
 //get lower bound vector
-vector<float> getlb(gridPtr margin, gridPtr volume, vector<int>& indexes){
+vector<float> getlb(gridPtr margin, gridPtr volume, const vector<int> &indexes){
     //make a copy of margin
     //set values outside of volume to -1000
     gridPtr lbnd (new grid(margin->dims, margin->t_));
@@ -188,7 +160,7 @@ vector<float> getlb(gridPtr margin, gridPtr volume, vector<int>& indexes){
     return lb;
 }
 //get upper bound vector
-vector<float> getub(gridPtr margin, gridPtr volume, vector<int>& indexes){
+vector<float> getub(gridPtr margin, gridPtr volume, const vector<int> &indexes){
     //make a copy of negative margin
     //set values inside of volume to 1000
     gridPtr ubnd (new grid(margin->dims, margin->t_));
@@ -270,53 +242,4 @@ qp_argsPtr primeQP(gridPtr volume, gridPtr margin, bandsPtr bnds){
 
     cout<<"quadratic program ready"<<endl;
     return out;
-}
-
-
-void visualizeGrid(gridPtr grid){
-    //convert imbedding function to point cloud for visualization
-    //create point clouds from bands for visualization
-    pcl::PointCloud<pcl::PointXYZRGB>::Ptr pcl_grid (new pcl::PointCloud<pcl::PointXYZRGB>());
-    for(int i=0; i<grid->dims[0]; i++){
-        for(int j=0; j<grid->dims[1]; j++){
-            for(int k=0; k<grid->dims[2]; k++){
-                if((*grid)[i][j][k]>0){
-                    pcl::PointXYZRGB pnt;
-                    pnt.x=(float)i; pnt.y=(float)j; pnt.z=(float)k;
-                    pnt.r=0;pnt.g=0;pnt.b=255;
-                    pcl_grid->push_back(pnt);
-                }
-                else if((*grid)[i][j][k]<0){
-                    pcl::PointXYZRGB pnt;
-                    pnt.x=(float)i; pnt.y=(float)j; pnt.z=(float)k;
-                    pnt.r=0;pnt.g=0;pnt.b=0;
-                    pcl_grid->push_back(pnt);
-                }
-                else{
-                    pcl::PointXYZRGB pnt;
-                    pnt.x=(float)i; pnt.y=(float)j; pnt.z=(float)k;
-                    pnt.r=0;pnt.g=255;pnt.b=0;
-                    pcl_grid->push_back(pnt);
-                }
-            }
-        }
-    }
-
-    //visualize
-    //display in visualizor
-    boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer (new pcl::visualization::PCLVisualizer ("3D Viewer"));
-    viewer->setBackgroundColor (0, 0, 0);
-    pcl::visualization::PointCloudColorHandlerRGBField<pcl::PointXYZRGB> rgb(pcl_grid);
-    viewer->addPointCloud<pcl::PointXYZRGB> (pcl_grid, rgb, "cloud");
-    viewer->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, "cloud");
-    viewer->addCoordinateSystem (1.0);
-    viewer->initCameraParameters ();
-    while (!viewer->wasStopped ())
-    {
-        viewer->spinOnce (100);
-        boost::this_thread::sleep (boost::posix_time::microseconds (100000));
-    }
-
-}
-
 }

@@ -5,7 +5,8 @@ project(assignConfidence)
 find_package(PCL 1.2 REQUIRED)
 #SET(CMAKE_CXX_FLAGS "-std=c++0x -Wno-deprecated")
 
-include_directories(${PCL_INCLUDE_DIRS} /home/adamjri/mesh_reconstruction/binvoxToPCL)
+include_directories(${PCL_INCLUDE_DIRS})
+include_directories(/home/adamjri/mesh_reconstruction/binvoxToPCL)
 
 link_directories(${PCL_LIBRARY_DIRS})
 add_definitions(${PCL_DEFINITIONS})

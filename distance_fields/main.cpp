@@ -1,20 +1,7 @@
-
-#include "voxelize.h"
-
-#include "binvoxToPcl.h"
-#include "assign_confidence.h"
-
-#include "ConstConf.h"
-
-#include "narrowBand.h"
-
-#include "optimize/quadprog.h"
-
-#include <iostream>
-
-using namespace std;
+#include "dfields.h"
 
 int main(int argc, char **argv){
+    //testing normal finding
     //create sphere volume
     Eigen::Vector3i dims;
     Eigen::Vector3i t_;
@@ -39,27 +26,7 @@ int main(int argc, char **argv){
         }
     }
     cout<<"sphere created"<<endl;
-
-
-    //get imbedding function
-    gridPtr F = optimize(volume);
-    //gridPtr F = volume;
-
-    //write to file
-    ofstream myfile;
-    myfile.open("embed_funcs/sphere.txt");
-    for(int i=0; i<F->dims[0]; i++){
-        for(int j=0; j<F->dims[1]; j++){
-            for(int k=0; k<F->dims[2]; k++){
-                myfile<<i<<","<<j<<","<<k<<","<<(*F)[i][j][k]<<endl;
-            }
-        }
-    }
-    myfile.close();
-
-
-    //visualize
-    F->visualize();
+    volume->visualize();
 
     return 1;
 }
