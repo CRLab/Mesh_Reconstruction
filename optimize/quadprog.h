@@ -19,11 +19,11 @@ void doStep(int row, const vector<float>& in, vector<float>& out,
     const vector<float>& lb, const vector<float>& ub);
 
 //quadratic programming optimization algorithm
-vector<float> runQP(qp_argsPtr args);
-
+vector<float> runQP(qp_argsPtr args, const vector<int> &featureIndexes, const bool USING_FEATURES);
 
 //Function for computing weighted voxel grid for marching cubes
 //takes as input a binary volume
-gridPtr optimize(gridPtr volume);
+gridPtr optimize(gridPtr volume, gridPtr featureMap, const bool USING_FEATURES);
+
 
 #endif

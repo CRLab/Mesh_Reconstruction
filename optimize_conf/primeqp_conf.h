@@ -52,9 +52,6 @@ struct qp_args{
 };
 typedef boost::shared_ptr<qp_args> qp_argsPtr;
 
-//create index map
-gridPtr getIndexMap(gridPtr band, const vector<int> &indexes);
-
 //make H matrix
 SparseMatrixPtr getHMat(gridPtr tightBand, gridPtr indexMap);
 

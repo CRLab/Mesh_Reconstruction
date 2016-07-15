@@ -96,4 +96,7 @@ gridPtr addGrids(gridPtr in1, gridPtr in2);
 //get linear indices of all non-zero voxels in grid
 vector<int> findIndexes(gridPtr band);
 
+//create index map
+gridPtr getIndexMap(gridPtr band, const vector<int>& indexes);
+
 #endif

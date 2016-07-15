@@ -21,6 +21,9 @@ gridPtr getsqdist_index(gridPtr volume_grid);
 //get square root of grid
 gridPtr getsqrt(gridPtr g);
 
+//*****************************************************************************************************
+//functions for computing normals of surface
+
 //get linear indices of neighboring voxels
 vector<int> getNeighbors(gridPtr g, const Eigen::Vector3i &pnt);
 
@@ -47,5 +50,20 @@ vector<int> getSurface(gridPtr volume);
 
 //get surface normals
 vector<Eigen::Vector3f> getSurfaceNormals(gridPtr volume, const vector<int> &surface);
+
+//returns index in vector of value, -1 if not contained
+int contains(vector<int> vec, int val);
+
+//create normals and visualize in pcl viewer
+void visualizeNormals(gridPtr volume);
+
+//*****************************************************************************************************
+//feature detection using normals
+
+//input is binary volume pre-smoothing
+//binary grid: 1=feature, 0=no feature
+//features can be ignored during smoothing
+//reasonable threshold ~0.9
+gridPtr getFeatureMap(gridPtr volume, gridPtr surfaceMap, const vector<Eigen::Vector3f> &normals, float threshold);
 
 #endif

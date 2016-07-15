@@ -26,9 +26,6 @@ struct qp_args{
 };
 typedef boost::shared_ptr<qp_args> qp_argsPtr;
 
-//create index map
-gridPtr getIndexMap(gridPtr band, const vector<int>& indexes);
-
 //make H matrix
 SparseMatrixPtr getHMat(gridPtr tightBand, gridPtr indexMap);
 
@@ -39,5 +36,10 @@ vector<float> getub(gridPtr margin, gridPtr volume, const vector<int>& indexes);
 
 //prepare quadratic program arguments
 qp_argsPtr primeQP(gridPtr volume, gridPtr margin, bandsPtr bnds);
+
+//************************************************************************************
+//get feature index vector from feature map and index map
+bool lowtohigh(int i, int j);
+vector<int> getFeatureIndexes(gridPtr featureMap, gridPtr indexMap);
 
 #endif

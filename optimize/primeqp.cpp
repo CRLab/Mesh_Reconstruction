@@ -3,28 +3,6 @@
 
 using namespace std;
 
-//linear indexing is used throughout
-//linear index = z*num_x*num_y + y*num_x + x;
-
-//create index map
-gridPtr getIndexMap(gridPtr band, const vector<int>& indexes){
-    gridPtr map_(new grid(band->dims, band->t_));
-    //set all values to -1
-    for(int i=0; i<map_->dims[0]; i++){
-        for(int j=0; j<map_->dims[1]; j++){
-            for(int k=0; k<map_->dims[2]; k++){
-                (*map_)[i][j][k]=-1.0;
-            }
-        }
-    }
-    //give i.d.'s to band location
-    for(int i=0; i<indexes.size(); i++){
-        (*map_)(indexes[i])=(float)i;
-    }
-    return map_;
-}
-
-
 //make H matrix
 SparseMatrixPtr getHMat(gridPtr tightBand, gridPtr indexMap){
     vector<int> indexes = findIndexes(tightBand);
@@ -241,5 +219,26 @@ qp_argsPtr primeQP(gridPtr volume, gridPtr margin, bandsPtr bnds){
     out->iter = 500;
 
     cout<<"quadratic program ready"<<endl;
+    return out;
+}
+
+//************************************************************************************
+//get feature index vector from feature map and index map
+//sorted low to high
+bool lowtohigh(int i, int j){
+    return (i<j);
+}
+vector<int> getFeatureIndexes(gridPtr featureMap, gridPtr indexMap){
+    vector<int> out;
+    for(int i=0; i<featureMap->dims[0]; i++){
+        for(int j=0; j<featureMap->dims[1]; j++){
+            for(int k=0; k<featureMap->dims[2]; k++){
+                if((*featureMap)[i][j][k]==1.0){
+                    out.push_back((int)(*indexMap)[i][j][k]);
+                }
+            }
+        }
+    }
+    sort(out.begin(), out.end(), lowtohigh);
     return out;
 }

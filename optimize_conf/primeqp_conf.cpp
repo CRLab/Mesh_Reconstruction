@@ -165,24 +165,6 @@ vector<float> getZVec(SparseMatrixPtr R, SparseMatrixPtr C, vector<float> &x_0){
 
 //**********************************************************************
 
-//create index map
-gridPtr getIndexMap(gridPtr band, const vector<int> &indexes){
-    gridPtr map_(new grid(band->dims, band->t_));
-    //set all values to -1
-    for(int i=0; i<map_->dims[0]; i++){
-        for(int j=0; j<map_->dims[1]; j++){
-            for(int k=0; k<map_->dims[2]; k++){
-                (*map_)[i][j][k]=-1.0;
-            }
-        }
-    }
-    //give i.d.'s to band location
-    for(int i=0; i<indexes.size(); i++){
-        (*map_)(indexes[i])=(float)i;
-    }
-    return map_;
-}
-
 //make H matrix
 SparseMatrixPtr getHMat(gridPtr tightBand, gridPtr indexMap){
     vector<int> indexes = findIndexes(tightBand);

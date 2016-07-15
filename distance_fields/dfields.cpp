@@ -194,6 +194,10 @@ gridPtr getsqrt(gridPtr g){
     return s;
 }
 
+
+//*****************************************************************************************************
+//functions for computing normals of surface
+
 //get linear indices of neighboring voxels
 vector<int> getNeighbors(gridPtr g, const Eigen::Vector3i &pnt){
     vector<int> indexes;
@@ -260,6 +264,7 @@ Eigen::Vector3f getCentroid(gridPtr g, const vector<int> &pnts){
     centroid[0]=centroid[0]/(float)pnts.size();
     centroid[1]=centroid[1]/(float)pnts.size();
     centroid[2]=centroid[2]/(float)pnts.size();
+    return centroid;
 }
 
 //get covariance matrix of surface point
@@ -284,6 +289,7 @@ Eigen::Matrix3f getCovariance(gridPtr g, const Eigen::Vector3i &pnt){
             covariance(row,col) = covariance(row,col)/(float)indexes.size();
         }
     }
+    return covariance;
 }
 
 //get normal vector from covariance matrix
@@ -310,7 +316,7 @@ void orientNormal(gridPtr g, Eigen::Vector3f &normal, const Eigen::Vector3i &pnt
     Eigen::Vector3f centroid = getCentroid(g, getNeighbors(g, pnt));
     centroid[0]-=(float)pnt[0]; centroid[1]-=(float)pnt[1]; centroid[2]-=(float)pnt[2];
     float prod = normal[0]*centroid[0]+normal[1]*centroid[1]+normal[2]*centroid[2];
-    if(prod<0.0){
+    if(prod>0.0){
         normal[0]=-normal[0]; normal[1]=-normal[1]; normal[2]=-normal[2];
     }
 }
@@ -337,8 +343,217 @@ vector<int> getSurface(gridPtr volume){
 vector<Eigen::Vector3f> getSurfaceNormals(gridPtr volume, const vector<int> &surface){
     vector<Eigen::Vector3f> normals;
     for(int i=0; i<surface.size(); i++){
-        normals.push_back(getNormalVector(getCovariance(volume, volume->ind2sub(surface[i]))));
+        Eigen::Matrix3f covariance = getCovariance(volume, volume->ind2sub(surface[i]));
+        Eigen::Vector3f norm = getNormalVector(covariance);
+        normals.push_back(norm);
         orientNormal(volume, normals[i], volume->ind2sub(surface[i]));
     }
+    return normals;
+}
+
+//returns index in vector of value, -1 if not contained
+int contains(vector<int> vec, int val){
+    for(int i=0; i<vec.size(); i++){
+        if(vec[i]==val) return i;
+    }
+    return -1;
+}
+
+
+//create normals and visualize in pcl viewer
+void visualizeNormals(gridPtr volume){
+    vector<int> surface = getSurface(volume);
+    gridPtr surfaceMap = getIndexMap(volume, surface);
+    vector<Eigen::Vector3f> normals = getSurfaceNormals(volume, surface);
+
+    //create point cloud from volume
+    //convert imbedding function to point cloud for visualization
+    //create point clouds from bands for visualization
+    pcl::PointCloud<pcl::PointXYZRGB>::Ptr pcl_grid (new pcl::PointCloud<pcl::PointXYZRGB>());
+    for(int i=0; i<volume->dims[0]; i++){
+        for(int j=0; j<volume->dims[1]; j++){
+            for(int k=0; k<volume->dims[2]; k++){
+                if((*volume)[i][j][k]>0){
+                    Eigen::Vector3i pnt;
+                    pnt[0]=i; pnt[1]=j; pnt[2]=k;
+                    int index = volume->sub2ind(pnt);
+                    int ind = contains(surface, index);
+                    if(ind==-1){
+                        pcl::PointXYZRGB p;
+                        p.x=(float)i; p.y=(float)j; p.z=(float)k;
+                        p.r=0;p.g=0;p.b=255;
+                        pcl_grid->push_back(p);
+                    }
+                    else{
+                        pcl::PointXYZRGB p;
+                        p.x=(float)i; p.y=(float)j; p.z=(float)k;
+                        p.r=255;p.g=0;p.b=0;
+                        pcl_grid->push_back(p);
+                    }
+                }
+                else{
+                    pcl::PointXYZRGB p;
+                    p.x=(float)i; p.y=(float)j; p.z=(float)k;
+                    p.r=0;p.g=0;p.b=0;
+                    pcl_grid->push_back(p);
+                }
+            }
+        }
+    }
+
+    //create point cloud of normals
+    pcl::PointCloud<pcl::Normal>::Ptr normal_grid (new pcl::PointCloud<pcl::Normal>());
+    for(int i=0; i<volume->dims[0]; i++){
+        for(int j=0; j<volume->dims[1]; j++){
+            for(int k=0; k<volume->dims[2]; k++){
+                int ind = (*surfaceMap)[i][j][k];
+                if(ind==-1){
+                    pcl::Normal norm;
+                    norm.normal_x = norm.normal_y = norm.normal_z = norm.data_n[3] = 0.0f;
+                    norm.curvature = 0;
+                    normal_grid->push_back(norm);
+                }
+                else{
+                    pcl::Normal norm;
+                    norm.normal_x = normals[ind][0]; norm.normal_y = normals[ind][1]; norm.normal_z = normals[ind][2];
+                    norm.curvature = 0;
+                    norm.data_n[3]=0.0f;
+                    normal_grid->push_back(norm);
+                }
+            }
+        }
+    }
+
+    //visualize
+    boost::shared_ptr<pcl::visualization::PCLVisualizer> viewer (new pcl::visualization::PCLVisualizer ("3D Viewer"));
+    viewer->setBackgroundColor (0, 0, 0);
+    pcl::visualization::PointCloudColorHandlerRGBField<pcl::PointXYZRGB> rgb(pcl_grid);
+    viewer->addPointCloud<pcl::PointXYZRGB> (pcl_grid, rgb, "sample cloud");
+    viewer->setPointCloudRenderingProperties (pcl::visualization::PCL_VISUALIZER_POINT_SIZE, 3, "sample cloud");
+    viewer->addPointCloudNormals<pcl::PointXYZRGB, pcl::Normal> (pcl_grid, normal_grid, 1, 0.25, "normals");
+    viewer->addCoordinateSystem (1.0);
+    viewer->initCameraParameters ();
+    while (!viewer->wasStopped ())
+    {
+        viewer->spinOnce (100);
+        boost::this_thread::sleep (boost::posix_time::microseconds (100000));
+    }
+}
+
+//********************************************************************************************************************
+//feature detection using normals
+
+//input is binary volume pre-smoothing
+//binary grid: 1=feature, 0=no feature
+//features can be ignored during smoothing
+//reasonable threshold ~0.9
+gridPtr getFeatureMap(gridPtr volume, gridPtr surfaceMap, const vector<Eigen::Vector3f> &normals, float threshold){
+    gridPtr featureMap (new grid(volume->dims, volume->t_));
+    for(int i=0; i<featureMap->dims[0]; i++){
+        for(int j=0; j<featureMap->dims[1]; j++){
+            for(int k=0; k<featureMap->dims[2]; k++){
+                (*featureMap)[i][j][k]=0.0;
+            }
+        }
+    }
+
+    int edgeTable[256]={
+    0x0  , 0x109, 0x203, 0x30a, 0x406, 0x50f, 0x605, 0x70c,
+    0x80c, 0x905, 0xa0f, 0xb06, 0xc0a, 0xd03, 0xe09, 0xf00,
+    0x190, 0x99 , 0x393, 0x29a, 0x596, 0x49f, 0x795, 0x69c,
+    0x99c, 0x895, 0xb9f, 0xa96, 0xd9a, 0xc93, 0xf99, 0xe90,
+    0x230, 0x339, 0x33 , 0x13a, 0x636, 0x73f, 0x435, 0x53c,
+    0xa3c, 0xb35, 0x83f, 0x936, 0xe3a, 0xf33, 0xc39, 0xd30,
+    0x3a0, 0x2a9, 0x1a3, 0xaa , 0x7a6, 0x6af, 0x5a5, 0x4ac,
+    0xbac, 0xaa5, 0x9af, 0x8a6, 0xfaa, 0xea3, 0xda9, 0xca0,
+    0x460, 0x569, 0x663, 0x76a, 0x66 , 0x16f, 0x265, 0x36c,
+    0xc6c, 0xd65, 0xe6f, 0xf66, 0x86a, 0x963, 0xa69, 0xb60,
+    0x5f0, 0x4f9, 0x7f3, 0x6fa, 0x1f6, 0xff , 0x3f5, 0x2fc,
+    0xdfc, 0xcf5, 0xfff, 0xef6, 0x9fa, 0x8f3, 0xbf9, 0xaf0,
+    0x650, 0x759, 0x453, 0x55a, 0x256, 0x35f, 0x55 , 0x15c,
+    0xe5c, 0xf55, 0xc5f, 0xd56, 0xa5a, 0xb53, 0x859, 0x950,
+    0x7c0, 0x6c9, 0x5c3, 0x4ca, 0x3c6, 0x2cf, 0x1c5, 0xcc ,
+    0xfcc, 0xec5, 0xdcf, 0xcc6, 0xbca, 0xac3, 0x9c9, 0x8c0,
+    0x8c0, 0x9c9, 0xac3, 0xbca, 0xcc6, 0xdcf, 0xec5, 0xfcc,
+    0xcc , 0x1c5, 0x2cf, 0x3c6, 0x4ca, 0x5c3, 0x6c9, 0x7c0,
+    0x950, 0x859, 0xb53, 0xa5a, 0xd56, 0xc5f, 0xf55, 0xe5c,
+    0x15c, 0x55 , 0x35f, 0x256, 0x55a, 0x453, 0x759, 0x650,
+    0xaf0, 0xbf9, 0x8f3, 0x9fa, 0xef6, 0xfff, 0xcf5, 0xdfc,
+    0x2fc, 0x3f5, 0xff , 0x1f6, 0x6fa, 0x7f3, 0x4f9, 0x5f0,
+    0xb60, 0xa69, 0x963, 0x86a, 0xf66, 0xe6f, 0xd65, 0xc6c,
+    0x36c, 0x265, 0x16f, 0x66 , 0x76a, 0x663, 0x569, 0x460,
+    0xca0, 0xda9, 0xea3, 0xfaa, 0x8a6, 0x9af, 0xaa5, 0xbac,
+    0x4ac, 0x5a5, 0x6af, 0x7a6, 0xaa , 0x1a3, 0x2a9, 0x3a0,
+    0xd30, 0xc39, 0xf33, 0xe3a, 0x936, 0x83f, 0xb35, 0xa3c,
+    0x53c, 0x435, 0x73f, 0x636, 0x13a, 0x33 , 0x339, 0x230,
+    0xe90, 0xf99, 0xc93, 0xd9a, 0xa96, 0xb9f, 0x895, 0x99c,
+    0x69c, 0x795, 0x49f, 0x596, 0x29a, 0x393, 0x99 , 0x190,
+    0xf00, 0xe09, 0xd03, 0xc0a, 0xb06, 0xa0f, 0x905, 0x80c,
+    0x70c, 0x605, 0x50f, 0x406, 0x30a, 0x203, 0x109, 0x0   };
+
+    for(int i=0; i<volume->dims[0]-1; i++){
+        for(int j=0; j<volume->dims[1]-1; j++){
+            for(int k=0; k<volume->dims[2]-1; k++){
+                //create gridcell
+                int gridcell[8];
+                for(int n=0; n<8; n++){
+                    int i_ = ((n%4)==1 || (n%4)==2);
+                    int j_ = (n%4)/2;
+                    int k_ = n/4;
+                    gridcell[n] = (int)(*volume)[i+i_][j+j_][k+k_];
+                }
+                int cubeindex=0;
+                if (gridcell[0] < 1) cubeindex |= 1;
+                if (gridcell[1] < 1) cubeindex |= 2;
+                if (gridcell[2] < 1) cubeindex |= 4;
+                if (gridcell[3] < 1) cubeindex |= 8;
+                if (gridcell[4] < 1) cubeindex |= 16;
+                if (gridcell[5] < 1) cubeindex |= 32;
+                if (gridcell[6] < 1) cubeindex |= 64;
+                if (gridcell[7] < 1) cubeindex |= 128;
+
+                //check if cube is on the edge
+                if(edgeTable[cubeindex]==0) continue;
+
+                //check for feature in cube
+                //get opening angles of normals
+                float min=5.0;
+                for(int n=0; n<7; n++){
+                    for(int m=n+1; m<8; m++){
+                        int i_1 = ((n%4)==1 || (n%4)==2);
+                        int j_1 = (n%4)/2;
+                        int k_1 = n/4;
+                        int i_2 = ((m%4)==1 || (m%4)==2);
+                        int j_2 = (m%4)/2;
+                        int k_2 = m/4;
+                        int index1 = (*surfaceMap)[i+i_1][j+j_1][k+k_1];
+                        int index2 = (*surfaceMap)[i+i_2][j+j_2][k+k_2];
+                        if(index1==-1 || index2==-1) continue;
+                        Eigen::Vector3f norm1 = normals[index1];
+                        Eigen::Vector3f norm2 = normals[index2];
+                        float angle = norm1[0]*norm2[0]+norm1[1]*norm2[1]+norm1[2]*norm2[2];
+                        if(angle<min) min=angle;
+                    }
+                }
+
+                //check if within threshold for feature detection
+                if(min>=threshold) continue;
+
+                //set feature points to 1.0
+                for(int i_=0; i_<2; i_++){
+                    for(int j_=0; j_<2; j_++){
+                        for(int k_=0; k_<2; k_++){
+                            if((*surfaceMap)[i+i_][j+j_][k+k_]>-1.0){
+                                (*featureMap)[i+i_][j+j_][k+k_]=1.0;
+                            }
+                        }
+                    }
+                }
+
+            }
+        }
+    }//end of iteration through grid
+
+    return featureMap;
 }
 

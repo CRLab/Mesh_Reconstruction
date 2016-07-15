@@ -1,8 +1,7 @@
 cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
 #set(CMAKE_BUILD_TYPE Debug)
-project(dfields)
 
-#SET(CMAKE_CXX_FLAGS "-std=c++0x -Wno-deprecated")
+project(dfields)
 
 include_directories(/home/adamjri/mesh_reconstruction/grid)
 

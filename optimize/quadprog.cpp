@@ -61,7 +61,7 @@ void doStep(int row, const vector<float>& in, vector<float>& out,
 }
 
 //quadratic programming optimization algorithm
-vector<float> runQP(qp_argsPtr args){
+vector<float> runQP(qp_argsPtr args, const vector<int> &featureIndexes, const bool USING_FEATURES){
     //get ir and jc
     vector<int> ir = getIr(args->R);
     vector<int> jc = getJc(args->R);
@@ -89,6 +89,16 @@ vector<float> runQP(qp_argsPtr args){
             doStep(r, *in, *out, ir, jc, pr, args->invdg, args->lb, args->ub);
         }
     }
+    if(USING_FEATURES){
+        //reset values at feature points
+        int count=0;
+        for(int i=0; i<args->x.size(); i++){
+            if(i==featureIndexes[count]){
+                (*out)[i]=0.2; //<--------------------------------------could be related to band size
+                count++;
+            }
+        }
+    }
 
     cout<<"quadratic program finished"<<endl;
     return *out;
@@ -98,7 +108,7 @@ vector<float> runQP(qp_argsPtr args){
 
 //Function for computing weighted voxel grid for marching cubes
 //takes as input a binary volume
-gridPtr optimize(gridPtr volume){
+gridPtr optimize(gridPtr volume, gridPtr featureMap, const bool USING_FEATURES){
     int BAND_SIZE=4.0;
     //prime quadratic programming arguments
     //prepare margin
@@ -109,14 +119,16 @@ gridPtr optimize(gridPtr volume){
     cout<<"bands created"<<endl;
     //get band point indexes
     vector<int> indexes = findIndexes(bnds->band);
+    //create index map
+    gridPtr indexMap = getIndexMap(bnds->band, indexes);
+    vector<int> featureIndexes = getFeatureIndexes(featureMap, indexMap);
     cout<<"indexes stored"<<endl;
 
     //prepare qp_args
     qp_argsPtr args = primeQP(volume, margin, bnds);
 
     //run quadratic programming
-    vector<float> x = runQP(args);
-
+    vector<float> x = runQP(args, featureIndexes, USING_FEATURES);
 
     //prepare new voxel grid with imbedding function
     gridPtr F = copyGrid(volume);
@@ -133,5 +145,3 @@ gridPtr optimize(gridPtr volume){
 
     return F;
 }
-
-

@@ -2,31 +2,31 @@
 
 int main(int argc, char **argv){
     //testing normal finding
-    //create sphere volume
     Eigen::Vector3i dims;
     Eigen::Vector3i t_;
-    dims[0]=64;dims[1]=64;dims[2]=64;
+    int n=5;
+    dims[0]=n;dims[1]=n;dims[2]=n;
     t_[0]=0;t_[1]=0;t_[2]=0;
     gridPtr volume (new grid(dims, t_));
-    float p = (float)floor(64.0*0.33);
-    p=p*p;
-    for(int i=0; i<64; i++){
-        for(int j=0; j<64; j++){
-            for(int k=0; k<64; k++){
-                float dist = ((float)i-31.5)*((float)i-31.5);
-                dist+= ((float)j-31.5)*((float)j-31.5);
-                dist+= ((float)k-31.5)*((float)k-31.5);
-                if(dist<p){
+    for(int i=0; i<n; i++){
+        for(int j=0; j<n; j++){
+            for(int k=0; k<n; k++){
+                if(i>0 && i<n-1 && j>0 && j<n-1 && k>0 && k<n-1){
                     (*volume)[i][j][k]=1.0;
                 }
-                else{
-                    (*volume)[i][j][k]=0.0;
-                }
+                else (*volume)[i][j][k]=0.0;
             }
         }
     }
-    cout<<"sphere created"<<endl;
-    volume->visualize();
+    //volume->visualize();
+    visualizeNormals(volume);
+    vector<int> surface = getSurface(volume);
+    gridPtr surfaceMap = getIndexMap(volume, surface);
+    vector<Eigen::Vector3f> normals = getSurfaceNormals(volume, surface);
+
+    gridPtr featureMap = getFeatureMap(volume, surfaceMap, normals, 0.85);
+
+    featureMap->visualize();
 
     return 1;
 }
