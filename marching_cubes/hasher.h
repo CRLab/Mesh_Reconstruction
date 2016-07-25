@@ -19,8 +19,21 @@ public:
     float x;
     float y;
     float z;
+
+    XYZ(){}
+    XYZ(float x_, float y_, float z_){
+        x=x_; y=y_; z=z_;
+    }
+
+    static float dist(const XYZ& lhs, const XYZ& rhs){
+        float d = (rhs.x-lhs.x)*(rhs.x-lhs.x);
+        d+=(rhs.y-lhs.y)*(rhs.y-lhs.y);
+        d+=(rhs.z-lhs.z)*(rhs.z-lhs.z);
+        return sqrt(d);
+    }
+
     friend bool operator==(const XYZ& lhs, const XYZ& rhs){
-        return lhs.x==rhs.x && lhs.y==rhs.y && lhs.z==rhs.z;
+        return dist(lhs, rhs)<0.00001;
     }
     friend bool operator!=(const XYZ& lhs, const XYZ& rhs){
         return !(lhs==rhs);
@@ -60,12 +73,6 @@ public:
             this->z=other.z;
         }
         return *this;
-    }
-    static float dist(const XYZ& lhs, const XYZ& rhs){
-        float d = (rhs.x-lhs.x)*(rhs.x-lhs.x);
-        d+=(rhs.y-lhs.y)*(rhs.y-lhs.y);
-        d+=(rhs.z-lhs.z)*(rhs.z-lhs.z);
-        return sqrt(d);
     }
 };
 

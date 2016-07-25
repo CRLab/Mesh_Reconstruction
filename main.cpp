@@ -76,11 +76,12 @@ int main(int argc, char **argv){
     if(CAPTURE_ALL_SHAPES) CAPTURE_ALL_SHAPE_DATA=true;
 
     //variable for toggling feature handling
-    const bool USING_FEATURES = false;
+    const bool USING_FEATURES = true;
 
     //thresholds for feature detection
-    const float FEATURE_THRESHOLD = 0.85;
-    const float CORNER_THRESHOLD = 0.7;
+    //threshold values must be in (0,1)
+    const float FEATURE_THRESHOLD = 0.75; //<----------------increasing raises sensitivity
+    const float CORNER_THRESHOLD = 0.8; //<-----------------decreasing raises sensitivity
 
     //Highest level directories for data input and output
     string DATA_DIR ("/home/adamjri/aligned_completion_results/");
@@ -204,7 +205,8 @@ int main(int argc, char **argv){
             createDirectory(MESH_DIR+SHAPE_NAMES[shape]);
             string out_file (SHAPE_CAPTURE_ANGLES[shape][angle]);
             out_file = out_file.substr(0, out_file.length()-1);
-            out_file+= "_mesh.ply";
+            if(USING_FEATURES) out_file+="_feat_mesh.ply";
+            else out_file+= "_mesh.ply";
             string out_path (MESH_DIR+SHAPE_NAMES[shape]+out_file);
 
             /* Extract mesh and write to file */

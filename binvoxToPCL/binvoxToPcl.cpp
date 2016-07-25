@@ -115,43 +115,52 @@ pcl::PointCloud<pcl::PointXYZ>::Ptr binvoxToPCL(string filespec, int res_factor)
 
     //convert voxels to point cloud
     pcl::PointCloud<pcl::PointXYZ>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZ> ());
-    for(int x=0; x<vox.depth; x++){
-        for(int y=0; y<vox.width; y++){
-            for(int z=0; z<vox.height; z++){
-                int index = get_index(vox, x,y,z);
-                if(vox.voxels[index]){
-                    //check if voxel is on boundary of grid or object
-                    bool x_low = (x==0); bool y_low = (y==0); bool z_low = (z==0);
-                    bool x_high = (x==vox.depth-1); bool y_high = (y==vox.width-1); bool z_high = (z==vox.height-1);
-                    if(!x_low) x_low = !vox.voxels[get_index(vox, x-1,y,z)];
-                    if(!y_low) y_low = !vox.voxels[get_index(vox, x,y-1,z)];
-                    if(!z_low) z_low = !vox.voxels[get_index(vox, x,y,z-1)];
-                    if(!x_high) x_high = !vox.voxels[get_index(vox, x+1,y,z)];
-                    if(!y_high) y_high = !vox.voxels[get_index(vox, x,y+1,z)];
-                    if(!z_high) z_high = !vox.voxels[get_index(vox, x,y,z+1)];
+    for(int x=0; x<vox.depth-1; x++){
+        for(int y=0; y<vox.width-1; y++){
+            for(int z=0; z<vox.height-1; z++){
+                //get indexes of cube
+                vector<int> indexes;
+                for(int i=0; i<=1; i++){
+                    for(int j=0; j<=1; j++){
+                        for(int k=0; k<=1; k++){
+                            indexes.push_back(get_index(vox, x+i, y+j, z+k));
+                        }
+                    }
+                }
 
-                    //get bounds for edges
-                    int x_lb = 0; int y_lb = 0; int z_lb = 0;
-                    int x_ub = res_factor; int y_ub = res_factor; int z_ub = res_factor;
-
-                    if(x_low) x_lb=res_factor/2; if(y_low) y_lb=res_factor/2; if(z_low) z_lb=res_factor/2;
-                    if(x_high) x_ub=(res_factor+1)/2; if(y_high) y_ub=(res_factor+1)/2; if(z_high) z_ub=(res_factor+1)/2;
-
-                    //create points evenly distributed inside of voxel
-                    pcl::PointXYZ pnt[(x_ub-x_lb)*(y_ub-y_lb)*(z_ub-z_lb)];
-                    for(int i=x_lb; i<x_ub; i++){
-                        for(int j=y_lb; j<y_ub; j++){
-                            for(int k=z_lb; k<z_ub; k++){
-                                int ind=(i-x_lb)*(y_ub-y_lb)*(z_ub-z_lb)+(j-y_lb)*(z_ub-z_lb)+(k-z_lb);
-                                pnt[ind].x = ((float)x+(0.5/(float)res_factor)+(float)i*(1/(float)res_factor))*vox.scale/((float)vox.depth)+vox.tx;
-                                pnt[ind].y = ((float)y+(0.5/(float)res_factor)+(float)j*(1/(float)res_factor))*vox.scale/((float)vox.width)+vox.ty;
-                                pnt[ind].z = ((float)z+(0.5/(float)res_factor)+(float)k*(1/(float)res_factor))*vox.scale/((float)vox.height)+vox.tz;
-                                cloud->push_back(pnt[ind]);
+                //create points evenly distributed inside of cube
+                for(int i=0; i<res_factor; i++){
+                    for(int j=0; j<res_factor; j++){
+                        for(int k=0; k<res_factor; k++){
+                            Eigen::Vector3f pnt;
+                            pnt[0] = (float)x+((float)i)/((float)res_factor);
+                            pnt[1] = (float)y+((float)j)/((float)res_factor);
+                            pnt[2] = (float)z+((float)k)/((float)res_factor);
+                            //check if pnt is closer to surface then outside
+                            float val=0.0;
+                            for(int n=0; n<8; n++){
+                                //get distance to point (l1 norm)
+                                int a=n/4;
+                                int b=(n%4)/2;
+                                int c=(n%4)%2;
+                                float dist = fabs(pnt[0]-(float)(x+a));
+                                dist+= fabs(pnt[1]-(float)(y+b));
+                                dist+= fabs(pnt[2]-(float)(z+c));
+                                dist+= 0.00001;
+                                float weight = (float)(2*vox.voxels[indexes[n]]-1);
+                                val+=(weight/dist);
+                            }
+                            if(val>0.0){
+                                pcl::PointXYZ p;
+                                p.x = (pnt[0]+0.5)*vox.scale/((float)vox.depth)+vox.tx;
+                                p.y = (pnt[1]+0.5)*vox.scale/((float)vox.width)+vox.ty;
+                                p.z = (pnt[2]+0.5)*vox.scale/((float)vox.height)+vox.tz;
+                                cloud->push_back(p);
                             }
                         }
-                    }//finished generate points for voxel x,y,z
+                    }
+                }//finished generate points for cube x,y,z
 
-                }
             }
         }
     }//finished generating point cloud

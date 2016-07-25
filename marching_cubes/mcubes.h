@@ -2,6 +2,7 @@
 #define MCUBES_H
 
 #include <eigen3/Eigen/Eigen>
+#include <math.h>
 
 #include "hasher.h"
 
@@ -310,6 +311,11 @@ typedef struct {
    vector<TRIANGLE> triangles;
 } GRIDCELL;
 
+struct vec_out{
+    Eigen::VectorXf vec;
+    vector<int> vec_inds;
+};
+
 //methods for doing feature detection and sample point computation
 
 //sets feature value in gridcell
@@ -317,11 +323,11 @@ typedef struct {
 void isFeature(GRIDCELL &cell, const vector<Eigen::Vector3f> &normals, float feat_thresh, float corner_thresh);
 
 //compute linear shift to center the grid
-Eigen::Vector3f getTransform(const GRIDCELL &cell);
+Eigen::Vector3f getTransform(const vector<XYZ> &vertList);
 
-Eigen::MatrixXf getNormMat(const GRIDCELL &cell, const vector<Eigen::Vector3f> &normals);
+vec_out getVec(const GRIDCELL &cell, const vector<XYZ> &vertList, const vector<Eigen::Vector3f> &normals, const Eigen::Vector3f &shift);
 
-Eigen::VectorXf getVec(const GRIDCELL &cell, const vector<Eigen::Vector3f> &normals, const Eigen::Vector3f &shift);
+Eigen::MatrixXf getNormMat(const GRIDCELL &cell, const vector<Eigen::Vector3f> &normals, const vec_out &v);
 
 //compute new sample point for feature
 Eigen::Vector3f computePoint(const Eigen::MatrixXf &normalMat, const Eigen::VectorXf &vec, const Eigen::Vector3f &shift, const bool isEdge);
@@ -331,14 +337,15 @@ Eigen::Vector3f computePoint(const Eigen::MatrixXf &normalMat, const Eigen::Vect
 
 vector<GRIDCELL> getGridCells(gridPtr in, gridPtr surfaceMap, const vector<Eigen::Vector3f> &normals, float feat_thresh, float corner_thresh, const bool USING_FEATURES);
 
-void Polygonise(GRIDCELL &grid, float isolevel, const bool USING_FEATURES);
+void Polygonise(GRIDCELL &grid, float isolevel, const vector<Eigen::Vector3f> &normals, const bool USING_FEATURES);
+vector<XYZ> getSamplePoints(const GRIDCELL &grid, float isolevel, int cubeindex);
 XYZ VertexInterp(float isolevel, XYZ p1, XYZ p2, float valp1, float valp2);
 
 //get list of edges from triangles
 //edges are sorted using XYZ<
 vector<vector<XYZ> > getEdges(const vector<TRIANGLE> &triangles);
 //check if edges are the same
-bool sameEdge(const vector<XYZ> &lhs, const vector<XYZ> &rhs);
+bool sameEdge(vector<XYZ> lhs, vector<XYZ> rhs);
 
 //perform edge flipping on features
 vector<TRIANGLE> flipEdges(vector<GRIDCELL> &cells, gridPtr in);
