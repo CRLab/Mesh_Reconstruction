@@ -21,8 +21,10 @@ private:
     void deallocGrid();
 
 public:
-    Eigen::Vector3i t_;
     Eigen::Vector3i dims;
+    Eigen::Vector3f shift;
+    Eigen::Vector3f scale;
+    int pad;
     //proxy class for float**
     class y_z{
     private:
@@ -51,8 +53,8 @@ public:
     //index operator for returning proxy float**
     y_z operator[](int index);
 
-    //construct unfilled grid with dimensions and translation
-    grid(const Eigen::Vector3i &dims_in, const Eigen::Vector3i &t_in);
+    //construct unfilled grid
+    grid(const Eigen::Vector3i &dims_in, const Eigen::Vector3f &scale_in, const Eigen::Vector3f &shift_in, const int pad_in);
     //copy constructor
     grid(grid& other);
 
@@ -73,6 +75,8 @@ public:
     float& operator()(int index);
 
     grid operator+(const grid& rhs);
+
+    Eigen::Vector3f getCloudPoint(const Eigen::Vector3f &pnt);
 
     void fillGrid(int res_factor);
 

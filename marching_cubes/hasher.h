@@ -33,7 +33,7 @@ public:
     }
 
     friend bool operator==(const XYZ& lhs, const XYZ& rhs){
-        return dist(lhs, rhs)<0.00001;
+        return dist(lhs, rhs)<0.000001;
     }
     friend bool operator!=(const XYZ& lhs, const XYZ& rhs){
         return !(lhs==rhs);

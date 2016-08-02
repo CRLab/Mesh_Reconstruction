@@ -10,7 +10,7 @@ typedef unsigned char byte;
 int main(int argc, char **argv){
     //convert binvox to pcl
     if(argc != 3){
-        cout <<"Usage: Optimize Mesh with Confidences <binvox completed filename> <pcd observed filename>" << endl << endl;
+        cout <<"Usage: Load binvox and pcd files into cloud <binvox completed filename> <pcd observed filename>" << endl << endl;
         exit(1);
     }
 

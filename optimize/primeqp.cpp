@@ -115,7 +115,7 @@ SparseMatrixPtr getHMat(gridPtr tightBand, gridPtr indexMap){
 vector<float> getlb(gridPtr margin, gridPtr volume, const vector<int> &indexes){
     //make a copy of margin
     //set values outside of volume to -1000
-    gridPtr lbnd (new grid(margin->dims, margin->t_));
+    gridPtr lbnd (new grid(margin->dims, margin->scale, margin->shift, margin->pad));
     for(int i=0; i<lbnd->dims[0]; i++){
         for(int j=0; j<lbnd->dims[1]; j++){
             for(int k=0; k<lbnd->dims[2]; k++){
@@ -141,7 +141,7 @@ vector<float> getlb(gridPtr margin, gridPtr volume, const vector<int> &indexes){
 vector<float> getub(gridPtr margin, gridPtr volume, const vector<int> &indexes){
     //make a copy of negative margin
     //set values inside of volume to 1000
-    gridPtr ubnd (new grid(margin->dims, margin->t_));
+    gridPtr ubnd (new grid(margin->dims, margin->scale, margin->shift, margin->pad));
     for(int i=0; i<ubnd->dims[0]; i++){
         for(int j=0; j<ubnd->dims[1]; j++){
             for(int k=0; k<ubnd->dims[2]; k++){

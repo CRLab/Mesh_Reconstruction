@@ -637,7 +637,12 @@ void mcubes(gridPtr in, gridPtr surfaceMap, const vector<Eigen::Vector3f> &norma
     myfile<<"end_header"<<endl;
     //stream points data
     for(int i=0; i<indexer.numPoints; i++){
-        myfile<<indexer.points[i].x<<" "<<indexer.points[i].y<<" "<<indexer.points[i].z<<endl;
+        Eigen::Vector3f pnt;
+        pnt[0]=indexer.points[i].x;
+        pnt[1]=indexer.points[i].y;
+        pnt[2]=indexer.points[i].z;
+        pnt = in->getCloudPoint(pnt);
+        myfile<<pnt[0]<<" "<<pnt[1]<<" "<<pnt[2]<<endl;
     }
     //stream triangle data
     for(int i=0; i<all_triangles.size(); i++){

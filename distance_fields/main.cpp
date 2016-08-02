@@ -3,11 +3,14 @@
 int main(int argc, char **argv){
     //testing normal finding
     Eigen::Vector3i dims;
-    Eigen::Vector3i t_;
+    Eigen::Vector3f scale;
+    Eigen::Vector3f shift;
+    int pad=0;
     int n=5;
     dims[0]=n;dims[1]=n;dims[2]=n;
-    t_[0]=0;t_[1]=0;t_[2]=0;
-    gridPtr volume (new grid(dims, t_));
+    scale[0]=1.0;scale[1]=1.0;scale[2]=1.0;
+    shift[0]=0.0;shift[1]=0.0;shift[2]=0.0;
+    gridPtr volume (new grid(dims, scale, shift, pad));
     for(int i=0; i<n; i++){
         for(int j=0; j<n; j++){
             for(int k=0; k<n; k++){

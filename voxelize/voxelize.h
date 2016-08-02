@@ -24,6 +24,8 @@ struct voxelized_data{
 };
 typedef boost::shared_ptr< voxelized_data> voxelized_dataPtr;
 
+float getResolution(pcl::PointCloud<pcl::InterestPoint>::Ptr cloud);
+
 //create voxel grid data
 VoxelGridPtr voxelize(pcl::PointCloud<pcl::InterestPoint>::Ptr input, pcl::PointCloud<pcl::InterestPoint>::Ptr output, float resolution);
 
@@ -35,7 +37,7 @@ vector<int> voxelNeighbors(pcl::octree::OctreePointCloudSearch<pcl::InterestPoin
 
 //go through voxelized data and modify strength of centroid to be average of voxel neighbors
 //input:: voxel grid, filtered point cloud, original cloud, primed octree
-void modifyStrengths(VoxelGridPtr grid, pcl::PointCloud<pcl::InterestPoint>::Ptr filtered_cloud,
+void modifyStrengths(pcl::PointCloud<pcl::InterestPoint>::Ptr filtered_cloud,
                      pcl::PointCloud<pcl::InterestPoint>::Ptr cloud, pcl::octree::OctreePointCloudSearch<pcl::InterestPoint>::Ptr octree);
 
 

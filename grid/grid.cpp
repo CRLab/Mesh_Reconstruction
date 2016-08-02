@@ -57,15 +57,19 @@ void grid::deallocGrid(){
     delete [] voxels;
 }
 
-grid::grid(const Eigen::Vector3i &dims_in, const Eigen::Vector3i &t_in){
+grid::grid(const Eigen::Vector3i &dims_in, const Eigen::Vector3f &scale_in, const Eigen::Vector3f &shift_in, const int pad_in){
     dims=dims_in;
-    t_=t_in;
+    scale = scale_in;
+    shift = shift_in;
+    pad=pad_in;
     allocGrid();
 }
 
 grid::grid(grid& other){
     dims=other.dims;
-    t_=other.t_;
+    scale=other.scale;
+    shift=other.shift;
+    pad=other.pad;
     allocGrid();
     for(int i=0; i<dims[0]; i++){
         for(int j=0; j<dims[1]; j++){
@@ -78,20 +82,31 @@ grid::grid(grid& other){
 
 //create grid from point cloud
 grid::grid(pcl::PointCloud<pcl::InterestPoint>::Ptr grid_cloud, VoxelGridPtr vox){
-    t_ = vox->getMinBoxCoordinates();
-    dims = vox->getNrDivisions();
+    Eigen::Vector3i min_box = vox->getMinBoxCoordinates();
+    Eigen::Vector3i num_divisions=vox->getNrDivisions();
+    dims=num_divisions;
+    Eigen::Vector3f high_vals;
+    high_vals[0]=-10000.0; high_vals[1]=-10000.0; high_vals[2]=-10000.0;
     //pad the grid with empty voxels on each side
-    int pad= 6;
+    pad= 6;
+    shift[0]=10000.0; shift[1]=10000.0; shift[2]=10000.0;
     dims[0]+=pad*2; dims[1]+=pad*2; dims[2]+=pad*2;
-    t_[0]-=pad; t_[1]-=pad; t_[2]-=pad;
     allocGrid();
     for(int i=0; i<dims[0]; i++){
         for(int j=0; j<dims[1]; j++){
             for(int k=0; k<dims[2]; k++){
                 Eigen::Vector3i pnt;
-                pnt[0]=i+t_[0]; pnt[1]=j+t_[1]; pnt[2]=k+t_[2];
+                pnt[0]=i+min_box[0]-pad; pnt[1]=j+min_box[1]-pad; pnt[2]=k+min_box[2]-pad;
                 int index = vox->getCentroidIndexAt(pnt);
-                if(index!=-1) voxels[i][j][k] = grid_cloud->points[index].strength;
+                if(index!=-1){
+                    if(grid_cloud->points[index].x<shift[0]) shift[0]=grid_cloud->points[index].x;
+                    if(grid_cloud->points[index].y<shift[1]) shift[1]=grid_cloud->points[index].y;
+                    if(grid_cloud->points[index].z<shift[2]) shift[2]=grid_cloud->points[index].z;
+                    if(grid_cloud->points[index].x>high_vals[0]) high_vals[0]=grid_cloud->points[index].x;
+                    if(grid_cloud->points[index].y>high_vals[1]) high_vals[1]=grid_cloud->points[index].y;
+                    if(grid_cloud->points[index].z>high_vals[2]) high_vals[2]=grid_cloud->points[index].z;
+                    voxels[i][j][k] = grid_cloud->points[index].strength;
+                }
                 else voxels[i][j][k]=-1.0;
 
                 if(i<pad||i>=dims[0]-pad||j<pad||j>=dims[1]-pad||k<pad||k>=dims[2]-pad){
@@ -100,6 +115,9 @@ grid::grid(pcl::PointCloud<pcl::InterestPoint>::Ptr grid_cloud, VoxelGridPtr vox
             }
         }
     }
+    scale[0]=(high_vals[0]-shift[0])/((float)num_divisions[0]);
+    scale[1]=(high_vals[1]-shift[1])/((float)num_divisions[1]);
+    scale[2]=(high_vals[2]-shift[2])/((float)num_divisions[2]);
 }
 
 grid::~grid(){
@@ -109,13 +127,17 @@ grid::~grid(){
 //copy assignment
 grid& grid::operator=(const grid& other){
     if(this!=&other){
+        this->pad=other.pad;
         if(this->dims[0]!=other.dims[0]||this->dims[1]!=other.dims[1]||this->dims[2]!=other.dims[2]){
             deallocGrid();
             this->dims = other.dims;
             allocGrid();
         }
-        if(this->t_[0]!=other.t_[0]||this->t_[1]!=other.t_[1]||this->t_[2]!=other.t_[2]){
-            this->t_ = other.t_;
+        if(this->scale[0]!=other.scale[0]||this->scale[1]!=other.scale[1]||this->scale[2]!=other.scale[2]){
+            this->scale = other.scale;
+        }
+        if(this->shift[0]!=other.shift[0]||this->shift[1]!=other.shift[1]||this->shift[2]!=other.shift[2]){
+            this->shift = other.shift;
         }
         for(int i=0; i<dims[0]; i++){
             for(int j=0; j<dims[1]; j++){
@@ -162,10 +184,12 @@ float& grid::operator()(int index){
 
 grid grid::operator+(const grid& rhs){
     if(rhs.dims[0]!=dims[0] || rhs.dims[1]!=dims[1] || rhs.dims[2]!=dims[2]
-            || rhs.t_[0]!=t_[0] || rhs.t_[1]!=t_[1] || rhs.t_[2]!=t_[2]){
+            || rhs.scale[0]!=scale[0] || rhs.scale[1]!=scale[1] || rhs.scale[2]!=scale[2]
+            || rhs.shift[0]!=shift[0] || rhs.shift[1]!=shift[1] || rhs.shift[2]!=shift[2]
+            || rhs.pad!=pad){
         cerr<<"can't add grids with different dimensions";
     }
-    grid out(dims, t_);
+    grid out(dims, scale, shift, pad);
     for(int i=0; i<out.dims[0]; i++){
         for(int j=0; j<out.dims[1]; j++){
             for(int k=0; k<out.dims[2]; k++){
@@ -174,6 +198,15 @@ grid grid::operator+(const grid& rhs){
         }
     }
     return out;
+}
+
+//get point in cloud corresponding to center of voxel pnt
+Eigen::Vector3f grid::getCloudPoint(const Eigen::Vector3f &pnt){
+    Eigen::Vector3f p;
+    p[0]=((pnt[0]-(float)pad)*scale[0])+shift[0];
+    p[1]=((pnt[1]-(float)pad)*scale[1])+shift[1];
+    p[2]=((pnt[2]-(float)pad)*scale[2])+shift[2];
+    return p;
 }
 
 //run this on the conf_grid to fill in any gaps between observed and completed clouds
@@ -279,28 +312,7 @@ void grid::visualize(){
 
 //get create grid with confidences
 gridPtr createGrid(pcl::PointCloud<pcl::InterestPoint>::Ptr grid_cloud, VoxelGridPtr vox, int res_factor){
-    Eigen::Vector3i t_ = vox->getMinBoxCoordinates();
-    Eigen::Vector3i dims = vox->getNrDivisions();
-    //pad the grid with empty voxels 5 on each side
-    int pad= 6;
-    dims[0]+=pad*2; dims[1]+=pad*2; dims[2]+=pad*2;
-    t_[0]-=pad; t_[1]-=pad; t_[2]-=pad;
-    gridPtr gp(new grid(dims, t_));
-    for(int i=0; i<gp->dims[0]; i++){
-        for(int j=0; j<gp->dims[1]; j++){
-            for(int k=0; k<gp->dims[2]; k++){
-                Eigen::Vector3i pnt;
-                pnt[0]=i+gp->t_[0]; pnt[1]=j+gp->t_[1]; pnt[2]=k+gp->t_[2];
-                int index = vox->getCentroidIndexAt(pnt);
-                if(index!=-1) (*gp)[i][j][k] = grid_cloud->points[index].strength;
-                else (*gp)[i][j][k]=-1.0;
-
-                if(i<pad||i>=gp->dims[0]-pad||j<pad||j>=gp->dims[1]-pad||k<pad||k>=gp->dims[2]-pad){
-                    (*gp)[i][j][k]=-1.0;
-                }
-            }
-        }
-    }
+    gridPtr gp(new grid(grid_cloud, vox));
 
     //fill in any holes between observed and completed clouds
     gp->fillGrid(res_factor);
@@ -309,7 +321,7 @@ gridPtr createGrid(pcl::PointCloud<pcl::InterestPoint>::Ptr grid_cloud, VoxelGri
 
 //create binary volume grid from confidence grid
 gridPtr getBinaryVolume(gridPtr grid_cloud){
-    gridPtr g(new grid(grid_cloud->dims, grid_cloud->t_));
+    gridPtr g(new grid(grid_cloud->dims, grid_cloud->scale, grid_cloud->shift, grid_cloud->pad));
     for(int i=0; i<g->dims[0]; i++){
         for(int j=0; j<g->dims[1]; j++){
             for(int k=0; k<g->dims[2]; k++){
@@ -329,7 +341,7 @@ gridPtr copyGrid(gridPtr in){
 
 //add 2 grids voxel by voxel
 gridPtr addGrids(gridPtr in1, gridPtr in2){
-    gridPtr g(new grid(in1->dims, in1->t_));
+    gridPtr g(new grid(in1->dims, in1->scale, in1->shift, in1->pad));
     *g = ((*in1)+(*in2));
     return g;
 }
@@ -360,7 +372,7 @@ vector<int> findIndexes(gridPtr band){
 
 //create index map
 gridPtr getIndexMap(gridPtr band, const vector<int>& indexes){
-    gridPtr map_(new grid(band->dims, band->t_));
+    gridPtr map_(new grid(band->dims, band->scale, band->shift, band->pad));
     //set all values to -1
     for(int i=0; i<map_->dims[0]; i++){
         for(int j=0; j<map_->dims[1]; j++){

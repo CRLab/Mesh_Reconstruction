@@ -81,7 +81,7 @@ gridPtr dilate_grid(gridPtr gr){
 //generate band and tight band (eroded band) using dist field "margin" and band_size
 bandsPtr createBands(gridPtr margin, float band_size){
     bandsPtr bnds = bandsPtr(new bands());
-    bnds->band = gridPtr(new grid(margin->dims, margin->t_));
+    bnds->band = gridPtr(new grid(margin->dims, margin->scale, margin->shift, margin->pad));
     //create band
     for(int i=0; i<bnds->band->dims[0]; i++){
         for(int j=0; j<bnds->band->dims[1]; j++){

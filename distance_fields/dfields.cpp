@@ -3,11 +3,9 @@
 
 using namespace std;
 
-
-
 //extract perimeter of binary volume
 gridPtr fastPerim(gridPtr volume_grid){
-    gridPtr g(new grid(volume_grid->dims, volume_grid->t_));
+    gridPtr g(new grid(volume_grid->dims, volume_grid->scale, volume_grid->shift, volume_grid->pad));
     for(int i=0; i<g->dims[0]; i++){
         for(int j=0; j<g->dims[1]; j++){
             for(int k=0; k<g->dims[2]; k++){
@@ -64,7 +62,6 @@ gridPtr getsqdist(gridPtr volume_grid){
             }
         }
     }//end of first transformation
-
 
     dist_grid=copyGrid(dist_grid_copy);
     //second transformation
@@ -183,7 +180,7 @@ gridPtr getsqdist_index(gridPtr volume_grid){
 
 //get square root of grid
 gridPtr getsqrt(gridPtr g){
-    gridPtr s(new grid(g->dims, g->t_));
+    gridPtr s(new grid(g->dims, g->scale, g->shift, g->pad));
     for(int i=0; i<s->dims[0]; i++){
         for(int j=0; j<s->dims[1]; j++){
             for(int k=0; k<s->dims[2]; k++){
@@ -324,7 +321,7 @@ void orientNormal(gridPtr g, Eigen::Vector3f &normal, const Eigen::Vector3i &pnt
 //get indexes of surface points of volume grid
 vector<int> getSurface(gridPtr volume){
     vector<int> indexes;
-    gridPtr surface(new grid(volume->dims, volume->t_));
+    gridPtr surface(new grid(volume->dims, volume->scale, volume->shift, volume->pad));
     for(int i=0; i<surface->dims[0]; i++){
         for(int j=0; j<surface->dims[1]; j++){
             for(int k=0; k<surface->dims[2]; k++){
@@ -448,7 +445,7 @@ void visualizeNormals(gridPtr volume){
 //features can be ignored during smoothing
 //reasonable threshold ~0.9
 gridPtr getFeatureMap(gridPtr volume, gridPtr surfaceMap, const vector<Eigen::Vector3f> &normals, float threshold){
-    gridPtr featureMap (new grid(volume->dims, volume->t_));
+    gridPtr featureMap (new grid(volume->dims, volume->scale, volume->shift, volume->pad));
     for(int i=0; i<featureMap->dims[0]; i++){
         for(int j=0; j<featureMap->dims[1]; j++){
             for(int k=0; k<featureMap->dims[2]; k++){
