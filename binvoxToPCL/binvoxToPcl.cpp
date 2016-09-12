@@ -195,11 +195,14 @@ float getDensity(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud){
         count++;
     }
 
+    cout<<"Total Dist: "<< distTotal<<" Count: "<<count<<endl;
+
     return (float)count/distTotal;
 }
 
 int getResolutionFactor(string filespec, pcl::PointCloud<pcl::PointXYZ>::Ptr otherCloud){
-    float otherDensity = 3.0*getDensity(otherCloud)/4.0;
+  //float otherDensity = 3.0*getDensity(otherCloud)/4.0;
+    float otherDensity = 3.0*getDensity(otherCloud)/8.0;
     pcl::PointCloud<pcl::PointXYZ>::Ptr initCloud = binvoxToPCL(filespec);
     float density = getDensity(initCloud);
     cout<<"Observed density: "<<otherDensity<<endl;

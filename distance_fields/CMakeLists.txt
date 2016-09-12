@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
 
 project(dfields)
 
-include_directories(/home/adamjri/mesh_reconstruction/grid)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../grid)
 
 add_library(dfields_lib SHARED dfields.h dfields.cpp)
 

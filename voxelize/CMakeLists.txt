@@ -8,8 +8,8 @@ if(NOT PCL_INCLUDE_DIRS)
 endif(NOT PCL_INCLUDE_DIRS)
 
 include_directories(${PCL_INCLUDE_DIRS})
-include_directories(/home/adamjri/mesh_reconstruction/binvoxToPCL)
-include_directories(/home/adamjri/mesh_reconstruction/confidence_pcl)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../binvoxToPCL)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../confidence_pcl)
 
 link_directories(${PCL_LIBRARY_DIRS})
 add_definitions(${PCL_DEFINITIONS})
