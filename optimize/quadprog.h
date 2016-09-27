@@ -2,6 +2,7 @@
 #define QUADPROG_H
 
 #include <math.h>
+#include <cuda.h>
 
 #include "primeqp.h"
 
@@ -23,7 +24,7 @@ vector<float> runQP(qp_argsPtr args, const vector<int> &featureIndexes, const bo
 
 //Function for computing weighted voxel grid for marching cubes
 //takes as input a binary volume
-gridPtr optimize(gridPtr volume, gridPtr featureMap, const bool USING_FEATURES);
+gridPtr optimize(gridPtr volume, gridPtr featureMap, const bool USING_FEATURES, const bool USING_CUDA);
 
 
 #endif

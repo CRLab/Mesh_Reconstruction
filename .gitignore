@@ -1,1 +1,8 @@
 data/*
+build/*
+.vs/*
+*.sln
+*.vcxproj
+*.xml
+.idea/*
+Mesh Reconstruction.VC.db

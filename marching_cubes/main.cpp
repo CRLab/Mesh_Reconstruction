@@ -63,7 +63,7 @@ int main(int argc, char **argv){
 
     /* Perform smoothing */
     //get imbedding function
-    gridPtr F = optimize(volume, featureMap, USING_FEATURES);
+    gridPtr F = optimize(volume, featureMap, USING_FEATURES, false);
 
 
     /* Extract mesh and print to ply file */

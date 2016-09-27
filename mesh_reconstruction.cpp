@@ -14,31 +14,82 @@
 
 #include <iostream>
 
+#include <exception>
+#include <boost/program_options.hpp>
+
 using namespace std;
+namespace po = boost::program_options;
 
 int main(int argc, char **argv){
-    if(argc!=5 || (strcmp(argv[4], "0")!=0 && strcmp(argv[4], "1")!=0)){
-        cout<<"Usage: <binvox file> <pcd file> <output file> <0 or 1 to toggle feature handling>"<<endl;
-        return 1;
-    }
-    bool USING_FEATURES;
-    if(strcmp(argv[4], "1")==0){
-        cout<<"Using Feature Detection"<<endl;
-        USING_FEATURES=true;
-    }
-    else{
-        cout<<"Not Using Features"<<endl;
-        USING_FEATURES=false;
-    }
 
     //thresholds for feature detection
     //threshold values must be in (0,1)
-    const float FEATURE_THRESHOLD = 0.75; //<----------------increasing raises sensitivity
-    const float CORNER_THRESHOLD = 0.8; //<-----------------decreasing raises sensitivity
+    float FEATURE_THRESHOLD = 0.75; //<----------------increasing raises sensitivity
+    float CORNER_THRESHOLD = 0.8; //<-----------------decreasing raises sensitivity
+    bool USING_FEATURES = false; //<------------------determines if feature detection is used
+    bool USING_CUDA = false;     //<------------------determines if using GPU based algorithm
     //**************************************************************************************
 
-    //perform algorithm
+    try {
+        po::options_description desc("Allowed options");
+        desc.add_options()
+                ("help", "produce help message")
+                ("feature-detection", po::bool_switch(&USING_FEATURES), "Toggle feature handling")
+                ("cuda", po::bool_switch(&USING_CUDA), "Toggle CUDA option")
+                ("feature-threshold", po::value<float>(), "Increasing raises feature sensitivity. Default: 0.75")
+                ("corner-threshold", po::value<float>(), "Decreasing raises feature sensitivity. Default: 0.8")
+                ;
 
+        po::variables_map vm;
+        po::store(po::parse_command_line(argc, argv, desc), vm);
+        po::notify(vm);
+
+        if(argc < 4) {
+            cout<<"Usage: mesh_reconstruction <binvox file> <pcd file> <output file> <options>"<<endl;
+            cout << desc << endl;
+            return 1;
+        }
+
+        if (vm.count("help")) {
+            cout<<"Usage: mesh_reconstruction <binvox file> <pcd file> <output file> <options>"<<endl;
+            cout << desc << "\n";
+            return 0;
+        }
+
+        if(USING_FEATURES) {
+            cout << "Using feature detection" << endl;
+            USING_FEATURES = true;
+        } else {
+            cout << "Not using feature detection" << endl;
+            USING_FEATURES = false;
+        }
+
+        if(USING_CUDA) {
+            cout << "Using CUDA" << endl;
+            USING_CUDA = true;
+        } else {
+            cout << "Not using CUDA" << endl;
+            USING_CUDA = false;
+        }
+        if(vm.count("feature-threshold")) {
+            FEATURE_THRESHOLD = vm["feature-threshold"].as<float>();
+        }
+        cout << "Feature threshold is " << FEATURE_THRESHOLD  << endl;
+
+        if(vm.count("corner-threshold")) {
+            CORNER_THRESHOLD = vm["corner-threshold"].as<float>();
+        }
+        cout << "Corner threshold is " << CORNER_THRESHOLD << endl;
+    }
+    catch(std::exception& e) {
+        cerr << "error: " << e.what() << "\n";
+        return 1;
+    }
+    catch(...) {
+        cerr << "Exception of unknown type!\n";
+    }
+
+    //perform algorithm
     /* Get full path to pcd, binvox, output files */
     string pcd_path (argv[2]);
     string binvox_path (argv[1]);
@@ -77,7 +128,7 @@ int main(int argc, char **argv){
     gridPtr featureMap = getFeatureMap(volume, surfaceMap, normals, FEATURE_THRESHOLD);
 
     /* Perform smoothing */
-    gridPtr F = optimize(volume, featureMap, USING_FEATURES);
+    gridPtr F = optimize(volume, featureMap, USING_FEATURES, USING_CUDA);
 
     /* Extract mesh and write to file */
     mcubes(F, surfaceMap, normals, 0.0, FEATURE_THRESHOLD, CORNER_THRESHOLD, output_path.c_str(), USING_FEATURES);
