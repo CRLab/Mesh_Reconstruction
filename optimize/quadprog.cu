@@ -144,8 +144,13 @@ vector<float> runQPGPU(qp_argsPtr args,
     //perform algorithm
     cout << "Perform GPU algorithm" << endl;
     for(int i = 0; i < args->iter; i++){
+        if(i > 0) {
+            float* swap = inCu;
+            inCu = outCu;
+            outCu = swap;
+        }
         doStepDevice<<<NBLOCKS,BLOCK_SIZE>>>(inCu, outCu, irCu, jcCu, prCu, invdgCu, lbCu, ubCu, size);
-        cudaMemcpy(inCu, outCu, size * sizeof(float), cudaMemcpyDeviceToDevice);
+//        cudaMemcpy(inCu, outCu, size * sizeof(float), cudaMemcpyDeviceToDevice);
     }
 
     cudaThreadSynchronize();
@@ -231,7 +236,11 @@ gridPtr optimize(gridPtr volume, gridPtr featureMap, const bool USING_FEATURES, 
     int BAND_SIZE=4.0;
     //prime quadratic programming arguments
     //prepare margin
-    gridPtr margin = getsqrt(getsqdist(fastPerim(volume)));
+    gridPtr margin;
+    if(USING_CUDA)
+        margin = dfield_gpu(volume);
+    else
+        margin = getsqrt(getsqdist(fastPerim(volume)));
     cout<<"margin calculated"<<endl;
     //prepare bands
     bandsPtr bnds = createBands(margin, BAND_SIZE);
