@@ -2,7 +2,6 @@
 #define QUADPROG_H
 
 #include <math.h>
-#include <cuda.h>
 
 #include "primeqp.h"
 

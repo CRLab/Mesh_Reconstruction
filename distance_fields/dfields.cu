@@ -1,5 +1,6 @@
 
 #include "dfields.h"
+#include <cuda.h>
 
 using namespace std;
 

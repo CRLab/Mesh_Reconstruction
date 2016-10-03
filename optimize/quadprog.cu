@@ -1,5 +1,6 @@
 
 #include "quadprog.h"
+#include <cuda.h>
 
 using namespace std;
 
