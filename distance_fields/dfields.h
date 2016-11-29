@@ -66,4 +66,6 @@ void visualizeNormals(gridPtr volume);
 //reasonable threshold ~0.9
 gridPtr getFeatureMap(gridPtr volume, gridPtr surfaceMap, const vector<Eigen::Vector3f> &normals, float threshold);
 
+gridPtr dfield_gpu(gridPtr volume_grid);
+
 #endif

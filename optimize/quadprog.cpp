@@ -108,7 +108,7 @@ vector<float> runQP(qp_argsPtr args, const vector<int> &featureIndexes, const bo
 
 //Function for computing weighted voxel grid for marching cubes
 //takes as input a binary volume
-gridPtr optimize(gridPtr volume, gridPtr featureMap, const bool USING_FEATURES){
+gridPtr optimize(gridPtr volume, gridPtr featureMap, const bool USING_FEATURES, const bool USING_CUDA){
     int BAND_SIZE=4.0;
     //prime quadratic programming arguments
     //prepare margin
@@ -128,9 +128,9 @@ gridPtr optimize(gridPtr volume, gridPtr featureMap, const bool USING_FEATURES){
     qp_argsPtr args = primeQP(volume, margin, bnds);
 
     //run quadratic programming
-    vector<float> x = runQP(args, featureIndexes, USING_FEATURES);
+    x = runQP(args, featureIndexes, USING_FEATURES);
 
-    //prepare new voxel grid with imbedding function
+    //prepare new voxel grid with embedding function
     gridPtr F = copyGrid(volume);
     for(int i=0; i<F->dims[0]; i++){
         for(int j=0; j<F->dims[1]; j++){
