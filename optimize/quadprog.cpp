@@ -128,7 +128,7 @@ gridPtr optimize(gridPtr volume, gridPtr featureMap, const bool USING_FEATURES, 
     qp_argsPtr args = primeQP(volume, margin, bnds);
 
     //run quadratic programming
-    x = runQP(args, featureIndexes, USING_FEATURES);
+    vector<float> x = runQP(args, featureIndexes, USING_FEATURES);
 
     //prepare new voxel grid with embedding function
     gridPtr F = copyGrid(volume);

@@ -36,3 +36,8 @@ add_executable(optimize main.cpp)
 endif(CUDA_FOUND)
 
 target_link_libraries (optimize optimize_lib mcubes_lib voxelize_lib assignConfidence_lib binvoxToPcl_lib )
+
+install(TARGETS optimize_lib 
+        RUNTIME DESTINATION bin
+	LIBRARY DESTINATION lib
+	ARCHIVE DESTINATION lib)

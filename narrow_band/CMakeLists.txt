@@ -22,3 +22,9 @@ target_link_libraries (narrowBand_lib dfields_lib grid_lib ${PCL_LIBRARIES})
 add_executable (narrowBand main.cpp)
 
 target_link_libraries (narrowBand narrowBand_lib voxelize_lib assignConfidence_lib binvoxToPcl_lib)
+
+
+install(TARGETS narrowBand_lib 
+        RUNTIME DESTINATION bin
+	LIBRARY DESTINATION lib
+	ARCHIVE DESTINATION lib)

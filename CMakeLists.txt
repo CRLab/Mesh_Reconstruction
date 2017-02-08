@@ -52,7 +52,7 @@ target_link_libraries (m_cubes mcubes_lib grid_lib dfields_lib voxelize_lib assi
 target_link_libraries (mesh_reconstruction mcubes_lib optimize_lib narrowBand_lib grid_lib dfields_lib voxelize_lib assignConfidence_lib binvoxToPcl_lib ${PCL_LIBRARIES} ${Boost_LIBRARIES})
 #target_link_libraries (mesh_reconstruction mcubes_lib optimize_conf_lib optimize_lib narrowBand_lib grid_lib dfields_lib voxelize_lib assignConfidence_lib binvoxToPcl_lib ${PCL_LIBRARIES})
 
-install(TARGETS m_cubes mesh_reconstruction mcubes_lib optimize_lib narrowBand_lib grid_lib dfields_lib voxelize_lib assignConfidence_lib binvoxToPcl_lib
+install(TARGETS m_cubes mesh_reconstruction 
         RUNTIME DESTINATION bin
 	LIBRARY DESTINATION lib
 	ARCHIVE DESTINATION lib)

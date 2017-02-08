@@ -17,3 +17,8 @@ target_link_libraries (assignConfidence_lib ${PCL_LIBRARIES})
 add_executable (assignConfidence main.cpp)
 
 target_link_libraries (assignConfidence assignConfidence_lib binvoxToPcl_lib)
+
+install(TARGETS assignConfidence_lib 
+        RUNTIME DESTINATION bin
+	LIBRARY DESTINATION lib
+	ARCHIVE DESTINATION lib)

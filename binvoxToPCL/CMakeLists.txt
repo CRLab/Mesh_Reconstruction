@@ -14,3 +14,8 @@ add_library(binvoxToPcl_lib SHARED binvoxToPcl.h binvoxToPcl.cpp)
 target_link_libraries (binvoxToPcl_lib ${PCL_LIBRARIES})
 add_executable (convertBinvox main.cpp)
 target_link_libraries (convertBinvox binvoxToPcl_lib)
+
+install(TARGETS binvoxToPcl_lib 
+        RUNTIME DESTINATION bin
+	LIBRARY DESTINATION lib
+	ARCHIVE DESTINATION lib)

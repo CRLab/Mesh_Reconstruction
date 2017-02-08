@@ -15,3 +15,8 @@ target_link_libraries (grid_lib ${PCL_LIBRARIES})
 add_executable (grid main.cpp)
 
 target_link_libraries (grid grid_lib)
+
+install(TARGETS grid_lib 
+        RUNTIME DESTINATION bin
+	LIBRARY DESTINATION lib
+	ARCHIVE DESTINATION lib)

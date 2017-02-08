@@ -30,6 +30,11 @@ add_definitions(${PCL_DEFINITIONS})
 add_library(mcubes_lib SHARED hasher.h hasher.cpp mcubes.h mcubes.cpp)
 
 target_link_libraries (mcubes_lib grid_lib ${PCL_LIBRARIES})
-add_executable (mcubes main.cpp)
+add_executable (mcubes_test main.cpp)
 
-target_link_libraries (mcubes mcubes_lib optimize_lib narrowBand_lib dfields_lib voxelize_lib assignConfidence_lib binvoxToPcl_lib)
+target_link_libraries (mcubes_test mcubes_lib optimize_lib narrowBand_lib dfields_lib voxelize_lib assignConfidence_lib binvoxToPcl_lib)
+
+install(TARGETS mcubes_lib 
+        RUNTIME DESTINATION bin
+	LIBRARY DESTINATION lib
+	ARCHIVE DESTINATION lib)

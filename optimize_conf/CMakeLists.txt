@@ -22,3 +22,8 @@ target_link_libraries (optimize_conf_lib narrowBand_lib dfields_lib grid_lib vox
 add_executable (optimize_conf main.cpp)
 
 target_link_libraries (optimize_conf optimize_conf_lib)
+
+install(TARGETS optimize_conf_lib 
+        RUNTIME DESTINATION bin
+	LIBRARY DESTINATION lib
+	ARCHIVE DESTINATION lib)

@@ -19,3 +19,8 @@ target_link_libraries (voxelize_lib ${PCL_LIBRARIES})
 add_executable (voxelize main.cpp)
 
 target_link_libraries (voxelize voxelize_lib binvoxToPcl_lib assignConfidence_lib)
+
+install(TARGETS  voxelize_lib 
+        RUNTIME DESTINATION bin
+	LIBRARY DESTINATION lib
+	ARCHIVE DESTINATION lib)

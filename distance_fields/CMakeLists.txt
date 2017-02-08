@@ -23,3 +23,8 @@ endif(CUDA_FOUND)
 
 target_link_libraries (dfields dfields_lib)
 
+
+install(TARGETS dfields_lib 
+        RUNTIME DESTINATION bin
+	LIBRARY DESTINATION lib
+	ARCHIVE DESTINATION lib)
