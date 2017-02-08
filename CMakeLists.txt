@@ -41,12 +41,18 @@ add_subdirectory(optimize)
 add_subdirectory(marching_cubes)
 
 if(CUDA_FOUND)
-cuda_add_executable (mesh_reconstruction mesh_reconstruction.cpp)
-cuda_add_executable (m_cubes m_cubes.cpp)
+  cuda_add_executable (mesh_reconstruction mesh_reconstruction.cpp)
+  cuda_add_executable (m_cubes m_cubes.cpp)
 else()
-add_executable (mesh_reconstruction mesh_reconstruction.cpp)
-add_executable (m_cubes m_cubes.cpp)
+  add_executable (mesh_reconstruction mesh_reconstruction.cpp)
+  add_executable (m_cubes m_cubes.cpp)
 endif(CUDA_FOUND)
+
 target_link_libraries (m_cubes mcubes_lib grid_lib dfields_lib voxelize_lib assignConfidence_lib ${PCL_LIBRARIES})
 target_link_libraries (mesh_reconstruction mcubes_lib optimize_lib narrowBand_lib grid_lib dfields_lib voxelize_lib assignConfidence_lib binvoxToPcl_lib ${PCL_LIBRARIES} ${Boost_LIBRARIES})
 #target_link_libraries (mesh_reconstruction mcubes_lib optimize_conf_lib optimize_lib narrowBand_lib grid_lib dfields_lib voxelize_lib assignConfidence_lib binvoxToPcl_lib ${PCL_LIBRARIES})
+
+install(TARGETS m_cubes mesh_reconstruction mcubes_lib optimize_lib narrowBand_lib grid_lib dfields_lib voxelize_lib assignConfidence_lib binvoxToPcl_lib
+        RUNTIME DESTINATION bin
+	LIBRARY DESTINATION lib
+	ARCHIVE DESTINATION lib)
