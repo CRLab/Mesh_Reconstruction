@@ -22,8 +22,8 @@ int main(int argc, char **argv){
     const float CORNER_THRESHOLD = 0.8;
     //************************************************************
 
-    if(argc!=3){
-        cerr<<"Usage: <pcd filename> <output filename (.ply)>"<<endl;
+    if((argc!=3) and (argc != 4)){
+        cerr<<"Usage: <pcd filename> <output filename (.ply)> [optional]leaf_size"<<endl;
         return 1;
     }
 
@@ -31,7 +31,14 @@ int main(int argc, char **argv){
 
     string PCD_PATH (argv[1]);
     string OUT_PATH (argv[2]);
-
+    bool resolution_in_args = false;
+    float resolution;
+    if (argc == 4)
+      {
+	resolution_in_args = true;
+      }
+    
+    
     /* Read in data from pcd and binvox files */
     pcl::PointCloud<pcl::PointXYZ>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZ>());
     if (pcl::io::loadPCDFile<pcl::PointXYZ> (PCD_PATH.c_str(), *cloud) == -1){ //* load the file
@@ -44,7 +51,12 @@ int main(int argc, char **argv){
     /* Voxelize the data */
     //create dummy object
     pcl::PointCloud<pcl::InterestPoint>::Ptr dummy (new pcl::PointCloud<pcl::InterestPoint>());
-    float resolution = getResolution(confPCL);
+    if (resolution_in_args)
+      {
+	resolution = atof(argv[3]);
+    }else{
+      resolution = getResolution(confPCL);
+    }
     cout<<"Leaf size is "<<resolution<<endl;
     voxelized_dataPtr data (new voxelized_data());
     data->resolution=2*resolution;
