@@ -16,6 +16,8 @@ include_directories(EIGEN3_INCLUDE_DIR)
 FIND_PACKAGE(Boost COMPONENTS program_options REQUIRED)
 INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
 
+set_directory_properties( PROPERTIES COMPILE_DEFINITIONS "" )
+
 include_directories(${PCL_INCLUDE_DIRS})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/binvoxToPCL)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/confidence_pcl)
