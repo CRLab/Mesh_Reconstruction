@@ -6,7 +6,7 @@ Eigen: a recent install is required, default from apt-get for 14.04 is not new e
 
 CUDA: Optional, but speeds up reconstruction time.
 
-##Usage
+## Usage
 ```
 Usage: mesh_reconstruction <binvox file> <pcd file> <output file> <options>
 Allowed options:
