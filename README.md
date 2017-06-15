@@ -3,6 +3,7 @@ Code for combining Partial Object View with a CNN generated Completion
 
 ## Dependencies
 Eigen: a recent install is required, default from apt-get for 14.04 is not new enough
+
 CUDA: Optional, but speeds up reconstruction time.
 
 ##Usage
